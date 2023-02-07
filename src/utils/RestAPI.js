@@ -1,6 +1,6 @@
-export const cryptoURL = 'https://api.idcard.dev.veritecinc.com';
+export const cryptoURL = 'https://api.idcard.dev.veritecinc.com';	//'http://192.168.10.121:3000';
 
-export const serverURL = 'http://192.168.1.122:3000';
+export const serverURL = 'http://192.168.114.130:3000';
 // export const serverURL = 'https://api.idcard.dev.veritecinc.com';
 
 export const hostURL = serverURL;
@@ -49,14 +49,11 @@ const requestCall = (
 		reqParams.body = JSON.stringify(body);
 	}
 
-	let fullUrl = isFullUrl ? subUrl : hostURL + subUrl;
+	let fullUrl = isFullUrl ? subUrl : cryptoURL + "/" + subUrl; //hostURL
 	// console.log(fullUrl);
-	// // console.log('reqParams: LINE 39 ', reqParams)
 	if (isResponseJson == false) {
 		fetch(fullUrl).then(function (response) {
-			// console.log("response: LINE 42", response);
 			return response.text().then((text) => {
-				// // console.log('text:', text)
 				callBack(text, null);
 			});
 		});
@@ -81,7 +78,6 @@ const requestCall = (
 				});
 			})
 			.catch(function (err) {
-				// console.log("err: LINE 64", err);
 				callBack(null, err);
 			});
 	}
@@ -102,7 +98,7 @@ const formDataCall = (
 	callBack,
 	isFullLink = false
 ) => {
-	let link = isFullLink ? subUrl : hostURL + subUrl;
+	let link = isFullLink ? subUrl : hostURL + + "/" + subUrl;
 	futch(
 		link,
 		{
@@ -210,20 +206,12 @@ const RestAPI = {
 	},
 
 	generalGet:(apiSubUrl)=>{
-		
-
 		return new Promise((resolve, reject) => {
-			requestCall("/"+apiSubUrl, "GET", null,null, (res, err) => {
+			requestCall(apiSubUrl, "GET", null,null, (res, err) => {
 				if (err) {
-					// console.log(
-					// 	"LINE 204 Error while calling API ["+apiSubUrl+"] >>>>>>>>>>>>>>>err, res ",
-					// 	err,
-					// 	res
-					// );
 					let errObj = { status: err, ...res };
 					reject(errObj);
 				} else {
-				
 					resolve(res);
 				}
 			});
@@ -231,53 +219,27 @@ const RestAPI = {
 	},
 
 	
-	generalPost:(apiSubUrl, data)=>{
-		// console.log('generalPost jsonData > ', data);
-
+	generalPost:(apiSubUrl, data, header, isfullUrl)=>{
 		return new Promise((resolve, reject) => {
-			requestCall("/"+apiSubUrl, "POST", data, null, (res, err) => {
+			requestCall(apiSubUrl, "POST", data, header, (res, err) => {
 				if (err) {
-					// console.log(
-					// 	"LINE 204 Error while calling API ["+apiSubUrl+"] >>>>>>>>>>>>>>>err, res ",
-					// 	err,
-					// 	res
-					// );
 					let errObj = { status: err, ...res };
 					reject(errObj);
 				} else {
-					// console.log(
-					// 	"LINE 208 Success in ["+apiSubUrl+"] calling : >>>>>>>>>>> ",
-					// 	res
-					// );
 					resolve(res);
 				}
-			});
+			}, isfullUrl);
 		});
 	},
 
 	generalFormPost: (subUrl, formData) => {
-	
-
-		// console.log("register data : ", formData);
-
 		return new Promise((resolve, reject) => {
-			formDataCall("/" + subUrl, "post", formData, null, (res, err) => {
-				// console.log("register result : ", res, err);
-
+			formDataCall(subUrl, "post", formData, null, (res, err) => {
 				if (err) {
-                    // console.log(
-					// 	"LINE 204 Error while calling API ["+subUrl+"] >>>>>>>>>>>>>>>err, res ",
-					// 	err,
-					// 	res
-					// );
-					let errObj = { status: err, ...res };
+                	let errObj = { status: err, ...res };
 					reject(errObj);
 				} else {
-                    // console.log(
-					// 	"LINE 208 Success in ["+subUrl+"] calling : >>>>>>>>>>> ",
-					// 	res
-					// );
-					resolve(res);
+                	resolve(res);
 				}
 			});
 		});

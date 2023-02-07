@@ -119,6 +119,7 @@ export function CardsDataTable(props) {
   const [pageSize, setPageSize] = React.useState(10)
   const [loading, setLoading] = React.useState(false)
   const [selectionModel, setSelectionModel] = React.useState([])
+  const [rowCount, setRowCount] = React.useState(100)
   
   const handlePageChange = params => {
     setPage(params)
@@ -168,11 +169,12 @@ export function CardsDataTable(props) {
         if(!card.email){
           card.email = card.code_fields.email
         }
-        card.status = card.cardstatus 
+        card.status = card.cardstatus
         return card;
       })
-      setRows(newCards);
       cardnum = carddata.length;
+      setRowCount(cardnum)
+      setRows(newCards);
     }
     if (props.onLoad){
       props.onLoad(cardnum)
@@ -296,12 +298,12 @@ export function CardsDataTable(props) {
         columns={columns}
         autoHeight
         pagination
-        pageSize={10}
+        pageSize={pageSize}
         rowsPerPageOptions={[5, 10, 20]}
-        onPageSizeChange={({ page, pageCount, pageSize, rowCount }) => {
-          setPageSize(pageSize)
+        onPageSizeChange={(pagesize) => {
+          setPageSize(pagesize)
         }}
-        rowCount={100}
+        rowCount={rowCount}
         checkboxSelection
         paginationMode="server"
         onPageChange={handlePageChange}
@@ -424,7 +426,8 @@ class ManageCards extends React.Component {
                 sample_width: row.sample_width,
                 logo: row.logo,
                 program_template: row.program_template,
-                created_date: row.created_date
+                created_date: row.created_date,
+                printed_size: row.printed_size
               }
             return cardTemplate
            });
@@ -479,19 +482,26 @@ class ManageCards extends React.Component {
         let matrixsize = 114
         let logo = ''
         let program_name = ''
+        let printed_size = "small"
         for(let ind = 0; ind < this.state.card_programs.length; ind++){
           let card_prog = this.state.card_programs[ind]
           if (card_prog.program_id == rowdata.program_id){
+            // console.log("card Prog : ", card_prog)
             valFields = card_prog.program_template
             front_image = card_prog.card_image_front
             back_image = card_prog.card_image_back
             logo = card_prog.logo
             matrixsize = card_prog.matrix_size
             program_name = card_prog.program_name
+            printed_size = card_prog.printed_size
             break
           }
         }
 
+        if (valFields.length == 0){
+          reject('Can not find the temaplate') 
+          return
+        }
         // check the license limit before print
         if (rowdata.cardstatus === 'ordered'){
           if (cur_license){
@@ -508,29 +518,35 @@ class ManageCards extends React.Component {
           }
         }
         
-        let fields = defaultFields
-        
+        // let fields = defaultFields        
         for(let ind = 0; ind < valFields.length; ind++){
           valFields[ind].name = valFields[ind].label.toString().toLowerCase().replace(/\s/g, '_')
-          fields.push(valFields[ind])
+          // fields.push(valFields[ind])
         }
-        // console.log("form fileds :", fields)
+        // console.log("form fileds :", valFields)
+        // console.log("row data : ", rowdata)
   
         let body = {}
-        let code_fields = {}
-        let server_fields = {}
-        for (let i = 0; i < fields.length; i++) {
-          if (fields[i].extend){
-            server_fields[fields[i].name] = rowdata[fields[i].name]
-          } else{
-            code_fields[fields[i].name] = rowdata[fields[i].name]
+        let mem_id = ''
+        let text_one = ''
+        let text_two = ''
+        for (let i = 4; i < valFields.length; i++) {
+          let code_fields = rowdata.code_fields
+          if (i == 4 && !valFields[i].extend && code_fields[valFields[i].name] != 'undefined'){
+            text_one = valFields[i].label + ": " + code_fields[valFields[i].name]
+          } else if(i == 5 && !valFields[i].extend && code_fields[valFields[i].name] != 'undefined'){
+            text_two = valFields[i].label + ": " + code_fields[valFields[i].name]
           }
         }
-  
+        if (rowdata.code_fields["member_id"]){
+          mem_id = "ID: " + rowdata.code_fields["member_id"]
+        }
+        rowdata.code_fields["card_id"] = rowdata.card_id
+        
         body['face_image'] = rowdata.face_image
         body['compressed_face_image'] = rowdata.compressed_face_image
-        body['code_fields'] = code_fields
-        body['server_fields'] = server_fields
+        body['code_fields'] = rowdata.code_fields
+        body['server_fields'] = rowdata.server_fields
         body['program_id'] = rowdata.program_id
         body['barcode'] = rowdata.barcode
         body['barcode_size'] = matrixsize
@@ -540,14 +556,18 @@ class ManageCards extends React.Component {
         body['logo'] = logo
         body['cardstatus'] = rowdata.cardstatus
         body['user_id'] = userid
+        body['member_id'] = mem_id
+        body['printed_size'] = printed_size
+        body['text_one'] = text_one
+        body['text_two'] = text_two
+
         if (cur_license){
           body['license_id'] = cur_license.license_id
         } else {
           body['license_id'] = 0
         }
-  
-        // console.log('req body :', body)
-        // return
+        // console.log("body:", body)
+        // return 
         setTimeout(() => {
           axios
             .post(urlAPI, body, { headers })
@@ -700,6 +720,9 @@ class ManageCards extends React.Component {
       return
     }
     let selData = this.state.selRowData;
+    // console.log("sel row:", selData)
+    // console.log("card program :", this.state.card_programs)
+    //  return
     if (selData.length > 0) {
       this.setState({
         openProgress: true,
@@ -729,7 +752,7 @@ class ManageCards extends React.Component {
         this.setState({
           openProgress: false,
           openResultDlg: true,
-          resultTitle: 'Some error has generated. ' + errors.response.data.message,
+          resultTitle: 'Some error has generated. ' + errors,
         })
       })
     }  else {
@@ -861,7 +884,6 @@ class ManageCards extends React.Component {
               })
             }
           } else{
-            this.setState({ showLoader: false})
             if (this.alertRef.current) {
               this.alertRef.current.showDialog('', 'This card has deleted', () => {
                 this.setState({reload: !this.state.reload})
@@ -877,6 +899,9 @@ class ManageCards extends React.Component {
           if (error.response){
             err_str = error.response.data.message
           }
+          if (err_str.length < 5){
+            err_str = "Network Error"
+          }
           if (this.alertRef.current) {
             this.alertRef.current.showDialog('', err_str, () => {
               navigate('/manage-cards/')
@@ -890,7 +915,7 @@ class ManageCards extends React.Component {
 
     return (
       <MuiPickersUtilsProvider utils={DateFnsUtils}>
-        <MainLayout menuIndex={3} loader={this.state.showLoader} >
+        <MainLayout menuIndex={1} loader={this.state.showLoader} >
           <Grid container spacing={3} style={{maxWidth: 1300,marginLeft:'auto', marginRight:'auto'}}>
             <Grid item sm={6}>
               <div

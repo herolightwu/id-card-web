@@ -63,7 +63,9 @@ export class ViewManageCard extends React.Component {
       created_user:{},
       card_program:{},
       license: null,
-      member_id: ''
+      member_id: '',
+      text_one: '',
+      text_two: ''
     }
     this.alertRef = React.createRef()
   }
@@ -185,8 +187,7 @@ export class ViewManageCard extends React.Component {
       valFields[ind].name = valFields[ind].label.toString().toLowerCase().replace(/\s/g, '_')
       formfields.push(valFields[ind])
     }
-    // console.log("form fileds :", formfields)
-
+    
     Object.entries(this.props.location.state).forEach(([key, value]) => {
       for(let index = 0; index < formfields.length; index++){
         if (key === formfields[index].name){
@@ -199,7 +200,7 @@ export class ViewManageCard extends React.Component {
       Object.entries(this.props.location.state.code_fields).forEach(([key, value]) => {
         for(let index = 0; index < formfields.length; index++){
           if (key === formfields[index].name){
-            formfields[index].value = value
+            formfields[index].value = value            
           }
         }
       })
@@ -215,11 +216,18 @@ export class ViewManageCard extends React.Component {
       })
     }
 
-    // console.log("code fileds; ", this.props.location.state.code_fields)
-    // console.log("server fields: ", this.props.location.state.server_fields)
+    let text_one = ''
+    let text_two = ''
+    for(let ind = 0; ind < formfields.length; ind++){
+      if (ind === 7 && formfields[ind].value != "undefined" && !formfields[ind].extend){
+        text_one = formfields[ind].label + ": " + formfields[ind].value
+      } else if (ind === 8 && formfields[ind].value != "undefined" && !formfields[ind].extend){
+        text_two = formfields[ind].label + ": " + formfields[ind].value
+      }
+    }
     // console.log("form fields: ", formfields)
 
-    this.setState({formFields: formfields})
+    this.setState({formFields: formfields, text_one: text_one, text_two: text_two})
   }
 
   getCreatedUser(){
@@ -251,7 +259,7 @@ export class ViewManageCard extends React.Component {
   onSave = () => {
     const token = localStorage.getItem('token')
     const userid = localStorage.getItem('userId')
-    const urlAPI = cryptoURL + '/api/encode/' 
+    const urlAPI = serverURL + '/api/encode' 
     const beartoken = 'Bearer ' + token
     const headers = {
       Authorization: beartoken,
@@ -261,7 +269,7 @@ export class ViewManageCard extends React.Component {
     let isValid = true;
     let newShowError = {};
     for (let i = 0; i < fields.length; i++) {
-      if (!fields[i].value && i != 1 && i != 4){        
+      if (!fields[i].value){    //&& i != 1 && i != 4    
         newShowError[fields[i].name] = "This field is required";
         isValid = false;
       }
@@ -278,6 +286,7 @@ export class ViewManageCard extends React.Component {
     var body = {}
     let code_fields = {}
     let server_fields = {}
+    
     for (let i = 0; i < fields.length; i++) {
       if (fields[i].extend){
         server_fields[fields[i].name] = fields[i].value
@@ -289,10 +298,15 @@ export class ViewManageCard extends React.Component {
     delete code_fields.card_id
     delete code_fields.available
 
+    let bNoImageInCode = false
+    if (this.state.card_program.matrix_size < 114){
+      bNoImageInCode = true
+    }
+
     body['unique_id'] = this.props.location.state.unique_id
     body['code_fields'] = code_fields
     body['server_fields'] = server_fields
-    body['compressed_image'] = this.state.webp
+    body['compressed_image'] = bNoImageInCode? '' : this.state.webp
     body['program_id'] = this.props.location.state.program_id
     body['created_user'] = userid
     body['modified_user'] = userid
@@ -312,9 +326,10 @@ export class ViewManageCard extends React.Component {
     axios
       .post(urlAPI, req_body, { headers })
       .then(response => {
-        if (response.data.status === 'success') {          
+        if (response.data.status === 'success' && response.data.data.length > 0) {    
+          let enc_data = response.data.data.replace(/\u0002/g, '')
           this.setState({
-            barcode: response.data.data,
+            barcode: enc_data,
             openOrderConfirm:true,
             loader:false
           })
@@ -375,7 +390,7 @@ export class ViewManageCard extends React.Component {
         for(let index = 0; index < fields.length; index++){
           if (key == fields[index].name){
             fields[index].value = value
-          }
+          }          
         }
       })
     }
@@ -390,6 +405,16 @@ export class ViewManageCard extends React.Component {
       })
     }
 
+    let text_one = ''
+    let text_two = ''
+    for(let ind = 0; ind < formfields.length; ind++){
+      if (ind === 7 && formfields[ind].value != "undefined" && !formfields[ind].extend){
+        text_one = formfields[ind].label + ": " + formfields[ind].value
+      } else if (ind === 8 && formfields[ind].value != "undefined" && !formfields[ind].extend){
+        text_two = formfields[ind].label + ": " + formfields[ind].value
+      }
+    }
+
     let showEdit = true
     if (this.props.location.state.status === 'rejected'){
       showEdit = false
@@ -402,7 +427,9 @@ export class ViewManageCard extends React.Component {
       formFields:fields,
       webp:this.props.location.state.compressed_face_image,
       photo:this.props.location.state.face_image,
-      showError:false
+      showError:false,
+      text_one:text_one,
+      text_two:text_two
     })
     
   }
@@ -420,11 +447,18 @@ export class ViewManageCard extends React.Component {
     let body = {}
     let code_fields = {}
     let server_fields = {}
+    let text_one = ''
+    let text_two = ''
     for (let i = 0; i < fields.length; i++) {
       if (fields[i].extend){
         server_fields[fields[i].name] = fields[i].value
       } else{
         code_fields[fields[i].name] = fields[i].value
+      }
+      if (i === 7 && formfields[i].value != "undefined" && !formfields[i].extend){
+        text_one = formfields[i].label + ": " + formfields[i].value
+      } else if (ind === 8 && formfields[i].value != "undefined" && !formfields[i].extend){
+        text_two = formfields[i].label + ": " + formfields[i].value
       }
     }
 
@@ -459,9 +493,10 @@ export class ViewManageCard extends React.Component {
             loader: false,
             showCodeLabel:false,
             showEditButton: true,
-            showError: false
-          })
-          
+            showError: false,
+            text_one: text_one,
+            text_two: text_two
+          })          
         }
       })
       .catch((error) => {
@@ -523,7 +558,6 @@ export class ViewManageCard extends React.Component {
               })
             }
           } else{
-            this.setState({ showLoader: false})
             if (this.alertRef.current) {
               this.alertRef.current.showDialog('', 'This card has deleted', () => {
                 navigate('/manage-cards/')
@@ -538,6 +572,9 @@ export class ViewManageCard extends React.Component {
           let err_str = error.toString()
           if (error.response){
             err_str = error.response.data.message
+          }
+          if (err_str.length < 5){
+            err_str = "Network Error"
           }
           if (this.alertRef.current) {
             this.alertRef.current.showDialog('', err_str, () => {
@@ -681,14 +718,19 @@ export class ViewManageCard extends React.Component {
     let body = {}
     let code_fields = {}
     let server_fields = {}
+    let mem_id = ''
+    
     for (let i = 0; i < fields.length; i++) {
       if (fields[i].extend){
         server_fields[fields[i].name] = fields[i].value
       } else{
         code_fields[fields[i].name] = fields[i].value
       }
+      if (fields[i].name == 'member_id'){
+        mem_id = "ID: " + fields[i].value
+      }
     }
-
+    
     body['face_image'] = this.state.photo
     body['compressed_face_image'] = this.state.webp
     body['code_fields'] = code_fields
@@ -702,14 +744,17 @@ export class ViewManageCard extends React.Component {
     body['logo'] = this.state.card_program.logo
     body['cardstatus'] = this.props.location.state.cardstatus
     body['user_id'] = userid
+    body['member_id'] = mem_id
+    body['printed_size'] = this.state.card_program.printed_size
+    body['text_one'] = this.state.text_one
+    body['text_two'] = this.state.text_two
+    
     if (cur_license){
       body['license_id'] = cur_license.license_id
     } else {
       body['license_id'] = 0
     }   
 
-    // console.log('req body :', body)
-    // return
     axios
       .post(urlAPI, body, { headers })
       .then(response => {
@@ -783,6 +828,9 @@ export class ViewManageCard extends React.Component {
                       ordered_date={this.props.location.state.ordered_date} 
                       created_user={this.state.created_user}
                       barcode={this.state.barcode} 
+                      printed_size={this.state.card_program.printed_size? this.state.card_program.printed_size : "small"}
+                      text_one={this.state.text_one}
+                      text_two={this.state.text_two} 
                       onChanged={(changedWebp, changedPhoto) => {
                             this.setState({
                               isPhotoChanged:true,
@@ -1023,7 +1071,7 @@ export default function(props) {
   return (
     <ViewManageCard
       {...props}
-      menuIndex={3}
+      menuIndex={1}
       dispatch={dispatch}
       isDesktop={isDesktop}
       //   userData={userData}

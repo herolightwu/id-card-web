@@ -263,7 +263,8 @@ export class UserView extends React.Component {
     }
 
     const body = {
-      status: uStatus
+      status: uStatus,
+      domain: this.props.location.state.domain
     };
 
     this.setState({ showLoader: true })
@@ -313,9 +314,10 @@ export class UserView extends React.Component {
       'Authorization': beartoken
     };
     
-    const urlAPI = API_URL + '/deleteuser/' + this.state.userID
+    const urlAPI = API_URL + '/admin/deleteuser/' + this.state.userID
     const body = {
       user_id: this.state.userID,
+      domain: this.props.location.state.domain
     };
 
     this.setState({ showLoader: true })
@@ -329,7 +331,6 @@ export class UserView extends React.Component {
               })
             }
           } else{
-            this.setState({ showLoader: false})
             if (this.alertRef.current) {
               this.alertRef.current.showDialog('', 'This user has deleted', () => {
                 navigate('/admin/users')
@@ -344,6 +345,9 @@ export class UserView extends React.Component {
           let err_str = error.toString()
           if (error.response){
             err_str = error.response.data.message
+          }
+          if (err_str.length < 5){
+            err_str = "Network Error"
           }
           if (this.alertRef.current) {
             this.alertRef.current.showDialog('', err_str, () => {
@@ -395,18 +399,21 @@ export class UserView extends React.Component {
       return;
     }
 
+    let sel_domain = ''
+
     if (!this.props.isAdd){
+      sel_domain = this.props.location.state.domain
       const oldemail = this.props.location.state.email
       let old_array = oldemail.split('@')
       let old_domain = old_array[1]      
       const newemail = fields[0].value
-      // console.log("new domain : ", newemail)
+      console.log("domain : ", sel_domain)
       let new_array = newemail.split('@')
       let new_domain = new_array[1]      
       if (old_domain != new_domain){
         newShowError['email'] = 'Email domain can not be changed'
         isValid = false
-      }
+      }      
     } else {
       let old_domain = ''
       for (let i = 0; i < this.state.domainlist.length; i++){
@@ -418,10 +425,13 @@ export class UserView extends React.Component {
       let new_array = newemail.split('@')
       let new_str = new_array[1].split('.')
       let new_domain = new_str[0]
+      console.log(old_domain)
+      console.log(new_domain)
       if (old_domain != new_domain){
         newShowError['email'] = 'Email domain must be matched'
         isValid = false
       }
+      sel_domain = old_domain
     }
 
     this.setState({
@@ -467,7 +477,8 @@ export class UserView extends React.Component {
       user_programs: jsprograms,
       user_role: user_role,
       created_user: userid,
-      modified_user: userid
+      modified_user: userid,
+      domain: sel_domain,
     };
     // console.log("body : ", body)
 
@@ -508,9 +519,7 @@ export class UserView extends React.Component {
       this.setState({ showLoader: true })
       axios.put(urlAPI, body, { headers })
         .then(response => {
-          this.setState({ 
-            showLoader: false
-           })
+          this.setState({ showLoader: false })
           if(response.data.status ==='unauthorized'){
             this.setState({
               showError:true,
@@ -649,6 +658,12 @@ export class UserView extends React.Component {
             {!this.props.isAdd ? (
               <div style={{ marginTop: 20, paddingLeft: 20 }}>
                 <div>
+                  <Typography variant="body1">Domain: {this.props.location.state.domain}</Typography>
+                </div>
+                <div>
+                  <Typography variant="body1">Role: {this.props.location.state.user_role}</Typography>
+                </div>
+                <div>
                   <Typography variant="body1">User ID: {this.state.userID}</Typography>
                 </div>
                 <div style={{ marginTop: 5, marginBottom: 5 }}>
@@ -776,11 +791,11 @@ export class UserView extends React.Component {
           title={
             <>
               <div>
-                <Typography>Confirm Delete Administrator</Typography>
+                <Typography>Confirm Delete User</Typography>
               </div>
               <div>
                 <Typography>
-                  Are you sure you want to delete this administrator?
+                  Are you sure you want to delete this user?
                 </Typography>
               </div>
             </>
@@ -817,7 +832,7 @@ export default function(props) {
   return (
     <UserView
       {...props}
-      menuIndex={5}
+      menuIndex={3}
       isAdd={false}
       dispatch={dispatch}
       isDesktop={isDesktop}

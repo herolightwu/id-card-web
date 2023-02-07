@@ -75,6 +75,7 @@ export function UsersDT(props) {
   const [rows, setRows] = React.useState([])
   
   const [pageSize, setPageSize] = React.useState(10)
+  const [rowCount, setRowCount] = React.useState(100)
 
   const [loading, setLoading] = React.useState(false)
 
@@ -116,7 +117,7 @@ export function UsersDT(props) {
       user.id= user.user_id;
       return user;
     })
-
+    setRowCount(userdata.length)
     setRows(newUsers);
   }
 
@@ -188,12 +189,12 @@ export function UsersDT(props) {
         columns={columns}
         autoHeight
         pagination
-        pageSize={10}
+        pageSize={pageSize}
         rowsPerPageOptions={[5, 10, 20]}
-        onPageSizeChange={({ page, pageCount, pageSize, rowCount }) => {
-          setPageSize(pageSize)
+        onPageSizeChange={(pagesize) => {
+          setPageSize(pagesize)
         }}
-        rowCount={100}
+        rowCount={rowCount}
         checkboxSelection
         paginationMode="server"
         onPageChange={handlePageChange}
@@ -278,7 +279,6 @@ class Users extends React.Component {
               })
             }
           } else{
-            this.setState({ showLoader: false})
             if (this.alertRef.current) {
               this.alertRef.current.showDialog('', 'This user has deleted', () => {
                 this.setState({reload: !this.state.reload})
@@ -293,6 +293,9 @@ class Users extends React.Component {
           let err_str = error.toString()
           if (error.response){
             err_str = error.response.data.message
+          }
+          if (err_str.length < 5){
+            err_str = "Network Error"
           }
           if (this.alertRef.current) {
             this.alertRef.current.showDialog('', err_str, () => {
@@ -310,7 +313,7 @@ class Users extends React.Component {
     const { userData, classes } = this.props
 
     return (
-        <MainLayout menuIndex={4} loader={this.state.showLoader}>
+        <MainLayout menuIndex={2} loader={this.state.showLoader}>
           <Grid
             container
             spacing={3}

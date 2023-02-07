@@ -82,12 +82,16 @@ const useStyles = makeStyles(theme => ({
     },
 
     cardTitle:{
-      fontSize: 15,
+      fontSize: 14,
+      fontWeight: 600,
       color: VColor.black,      
+      marginBottom: -5
     },
     cardNumber:{
-      fontSize: 15,
-      color: VColor.darkGray,      
+      fontSize: 14,
+      fontWeight: 600,
+      color: VColor.red,    
+      marginBottom: -5
     },
 
     labelText:{

@@ -155,9 +155,9 @@ export class UserView extends React.Component {
               permitList.push('NFC Write');
             }  
           break;
-          case 'permission7':
+          case 'batch_loading':
             if (permits[express]){
-              permitList.push('Permission 7');
+              permitList.push('Batch Loading');
             }  
           break;
           case 'permission8':
@@ -393,7 +393,6 @@ export class UserView extends React.Component {
               })
             }
           } else{
-            this.setState({ showLoader: false})
             if (this.alertRef.current) {
               this.alertRef.current.showDialog('', 'This user has deleted', () => {
                 navigate('/users')
@@ -409,6 +408,9 @@ export class UserView extends React.Component {
           if (error.response){
             err_str = error.response.data.message
           }
+          if (err_str.length < 5){
+            err_str = "Network Error"
+          }
           if (this.alertRef.current) {
             this.alertRef.current.showDialog('', err_str, () => {
               navigate('/users')
@@ -420,6 +422,7 @@ export class UserView extends React.Component {
   handleStatus = () => {
     const token = localStorage.getItem('token');
     const userid = localStorage.getItem('userId');
+    const cur_domain = localStorage.getItem('domain');
     const beartoken = "Bearer " + token;
     const headers = { 
       'Authorization': beartoken
@@ -432,7 +435,8 @@ export class UserView extends React.Component {
     }
 
     const body = {
-      status: uStatus
+      status: uStatus,
+      domain: cur_domain
     };
 
     this.setState({ showLoader: true })
@@ -544,8 +548,8 @@ export class UserView extends React.Component {
       case 'NFC Write':
         perm = 'nfc_write';
         break;           
-      case 'Permission 7':
-        perm = 'permission7';
+      case 'Batch Loading':
+        perm = 'batch_loading';
         break;
       case 'Permission 8':
         perm = 'permission8';
@@ -565,6 +569,7 @@ export class UserView extends React.Component {
 
   onSave = () => {
     const token = localStorage.getItem('token');
+    const cur_domain = localStorage.getItem('domain');
     const userid = localStorage.getItem('userId');
     var urlAPI = API_URL + '/users';
     if (!this.props.isAdd){
@@ -699,7 +704,8 @@ export class UserView extends React.Component {
       user_programs: jsprograms,
       user_role: this.props.isAdd ? this.state.userRole : this.state.role,
       created_user: userid,
-      modified_user: userid
+      modified_user: userid,
+      domain: cur_domain
     }
 
     if (this.props.isAdd) { // create user      
@@ -1195,7 +1201,7 @@ export default function(props) {
   return (
     <UserView
       {...props}
-      menuIndex={4}
+      menuIndex={2}
       isAdd={false}
       dispatch={dispatch}
       isDesktop={isDesktop}

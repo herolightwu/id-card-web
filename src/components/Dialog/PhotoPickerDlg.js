@@ -45,6 +45,12 @@ export default function PhotoPickerDlg({
   const [croppedImage, setCroppedImage] = useState(null)
   const webcamRef = React.useRef()
 
+  // React.useEffect(()=>{
+  //   if (cropType === CropType.Logo){
+  //     setZoom(0.5)
+  //   }
+  // },[cropType])
+
   const onFileChange = event => {
     const url = URL.createObjectURL(event.target.files[0])
     setCurImg(url)

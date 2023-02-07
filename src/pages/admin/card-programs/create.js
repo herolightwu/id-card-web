@@ -26,7 +26,7 @@ export default function(props) {
   return (
     <ViewCardProgram
       {...props}
-      menuIndex={5}
+      menuIndex={3}
       dispatch={dispatch}
       isDesktop={isDesktop}
       isSmall={isSmall}

@@ -31,17 +31,17 @@ export function CardsDataTable(props) {
 
   var cardrows = props.data;
   if (typeof cardrows !== 'undefined'){
-    cardrows = cardrows.map((row) => {
-      row.id = row.program_id;
+    cardrows = cardrows.map((row, index) => {
+      row.id = index;
       return row
      });
   }
 
    const data = React.useRef({
-   columns: columns,
-   rows : cardrows,
-   rowLength: 100,
-   maxColumns: 5,
+    columns: columns,
+    rows : cardrows,
+    rowLength: 100,
+    maxColumns: 5,
   });
 
   const columns = [  
@@ -80,6 +80,7 @@ export function CardsDataTable(props) {
   const [page, setPage] = React.useState(0)
   const [rows, setRows] = React.useState([])
   const [pageSize, setPageSize] = React.useState(10)
+  const [rowCount, setRowCount] = React.useState(100)
 
   const [loading, setLoading] = React.useState(false)
 
@@ -187,6 +188,7 @@ export function CardsDataTable(props) {
         card.date = card.created_date
         return card;
       })
+      setRowCount(carddata.length)
       setRows(newCards);
     }
   }
@@ -243,7 +245,8 @@ export function CardsDataTable(props) {
       pxpcw: data.pxpcw,
       sampleWidth: data.sample_width,
       created_date: data.created_date,
-      domain: data.domain
+      domain: data.domain,
+      printed_size: data.printed_size,
     }
 
     dispatch(setSelCard(data))
@@ -267,13 +270,12 @@ export function CardsDataTable(props) {
         columns={columns}
         autoHeight
         pagination
-        pageSize={10}
+        pageSize={pageSize}
         rowsPerPageOptions={[5, 10, 20]}
-        onPageSizeChange={({ page, pageCount, pageSize, rowCount }) => {
+        onPageSizeChange={(pageSize) => {
           setPageSize(pageSize)
         }}
-        rowCount={100}
-        checkboxSelection
+        rowCount={rowCount}        
         paginationMode="server"
         onPageChange={handlePageChange}
         loading={loading}
@@ -337,6 +339,7 @@ class CardPrograms extends React.Component {
       sampleWidth: 4,
       created_date: today,
       domain: '',
+      printed_size: "small"
     }
     navigate('/admin/card-programs/create', {state: selectManageCard})
   }
@@ -387,6 +390,9 @@ class CardPrograms extends React.Component {
           if (error.response){
             err_str = error.response.data.message
           }
+          if (err_str.length < 5){
+            err_str = "Network Error"
+          }
           if (this.alertRef.current) {
             this.alertRef.current.showDialog('', err_str, () => {
               navigate('/admin/card-programs/')
@@ -403,7 +409,7 @@ class CardPrograms extends React.Component {
     const { userData, classes } = this.props
 
     return (
-        <MainLayout menuIndex={5} loader={this.state.showLoader}>
+        <MainLayout menuIndex={3} loader={this.state.showLoader}>
           <Grid
             container
             spacing={3}

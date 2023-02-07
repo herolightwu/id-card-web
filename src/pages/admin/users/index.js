@@ -22,19 +22,19 @@ import { VColor } from '../../../utils/constants'
 import { Grid } from '@material-ui/core'
 import {serverURL} from '../../../utils/RestAPI'
 
-const API_URL = serverURL + '/api/users/';
+const API_URL = serverURL + '/api/admin/users/';
 
 export function UsersDT(props) {  
 
   var userrows = props.data;
   if (typeof userrows !== 'undefined'){
-    userrows = userrows.map((row) => {
-      row.id = row.user_id;
+    userrows = userrows.map((row, index) => {
+      row.id = index;
        return row
      });
   }
 
-  const data = React.useRef({
+  const prop_data = React.useRef({
    columns: columns,
    rows : userrows,
    rowLength: 100,
@@ -42,10 +42,12 @@ export function UsersDT(props) {
   });
 
   const columns = [
-    { field: 'id', headerName: 'ID', width: 100 },
+    // { field: 'id', headerName: 'ID', width: 100 },
+    { field: 'domain', headerName: 'Domain', width: 140 },
     { field: 'email', headerName: 'Email', width: 250 },
     { field: 'first_name', headerName: 'First Name', width: 200 },
     { field: 'last_name', headerName: 'Last Name', width: 180 },  
+    { field: 'user_role', headerName: 'Role', width: 180 },  
     { field: 'user_status', headerName: 'Status', width: 100, hide: true },
     { field: 'actions', headerName: 'Action', width: 120, renderCell: (params) => {
       return (
@@ -74,10 +76,12 @@ export function UsersDT(props) {
   const dispatch = useDispatch()
 
   const [allUsers, setAllUsers] = React.useState([])
+  const [domainlist, setDomainlist] = React.useState([])
   const [page, setPage] = React.useState(0)
   const [rows, setRows] = React.useState([])
   
   const [pageSize, setPageSize] = React.useState(10)
+  const [rowCount, setRowCount] = React.useState(100)
 
   const [loading, setLoading] = React.useState(false)
 
@@ -85,98 +89,143 @@ export function UsersDT(props) {
     setPage(params)
   }
 
-  // const loadSeverData = ()=>
-  // {
-  //   if (domainlist.length > 0){
-  //     let promiseList = []
+  const loadDomainlist = () => {
+    setAllUsers([])
+    setRows([]); 
+    const token = localStorage.getItem('token');
+    const beartoken = "Bearer " + token;
+    const headers = { 
+      'Authorization': beartoken
+    };
+    const DOMAIN_URL = serverURL + '/api/domains';
+    return new Promise(resolve => {
+      setTimeout(() => {
+        axios.get(DOMAIN_URL, { headers })
+        .then(response => {
+          const domaindata = response.data.data;   
+          // console.log(domaindata)  
+          setDomainlist(domaindata)
+          resolve(domaindata);
+        })
+        .catch((error) => {
+          console.log(error);
+          return null;
+        }) 
+      }, Math.random() * 290 + 100) // simulate network latency
+    })
+  }
+
+  const loadSeverData = ()=>
+  {
+    if (domainlist.length > 0){
+      let promiseList = []
       
-  //     for (let index = 0; index < domainlist.length; index++) {
-  //       const element = domainlist[index].domain_name;
-  //       promiseList.push(loadUsers(element))
-  //     }
+      for (let index = 0; index < domainlist.length; index++) {
+        const element = domainlist[index].domain_name;
+        promiseList.push(loadUsers(element))
+      }
+      setLoading(true)
+      Promise.all(promiseList).then(resultArr=>{
+        setLoading(false)
+        let pre_allusers = allUsers
+        for (let i = 0; i < resultArr.length; i++){
+          pre_allusers = [...pre_allusers, ...resultArr[i]]
+        }
+        // console.log(pre_allusers)
+        setAllUsers(pre_allusers)
+      }).catch(errors => {
+        setLoading(false)
+        console.log(errors)
+      })
+    }
+  }
 
-  //     Promise.all(promiseList).then(resultArr=>{
-  //       let pre_allcards = allCards
-  //       for (let i = 0; i < resultArr.length; i++){
-  //         pre_allcards = [...pre_allcards, ...resultArr[i]]
-  //       }
-  //       console.log(pre_allcards)
-  //       setAllUsers(pre_allcards)
-  //     }).catch(errors => {
-  //       console.log(errors)
-  //     })
-  //   }
-  // }
-
-  const loadSeverUserData = ()=> {
-    setLoading(true)
+  const loadUsers = (sel_domain)=> {    
     const token = localStorage.getItem('token');
     const beartoken = "Bearer " + token;
     const headers = { 
       'Authorization': beartoken
     };
 
+    const body = {
+      'domain': sel_domain
+    }
+
     return new Promise(resolve => {
       setTimeout(() => {
-        axios.get(API_URL, { headers })
+        axios.post(API_URL, body, { headers })
         .then(response => {
           const users = response.data.data;
-          setAllUsers(users)
-          resolve(users);
+          if (users){
+            let userdata = users.map((row) => {
+              let rowdata = {
+                ...row,
+                domain: sel_domain
+              }
+              return rowdata
+            });
+            resolve(userdata)
+          } else {
+            resolve([])
+          }
         })
         .catch((error) => {
           console.log(error);
-          return null;
+          resolve([])
         }) 
         .finally(()=>{
-          setLoading(false)
+          
         })
-      }, Math.random() * 500 + 100) // simulate network latency
+      }, Math.random() * 300 + 100) // simulate network latency
     })
   }
 
   const loadfromUserRows = (userdata) => {
     const users = userdata.slice(page * pageSize, (page + 1) * pageSize)
-    const newUsers = users.map(user=>{
-      user.id= user.user_id;
+    const newUsers = users.map((user, index)=>{
+      user.id = index;
       return user;
     })
-
+    setRowCount(userdata.length)
     setRows(newUsers); 
   }
 
   const filterUserData = (filter_mail, filter_status) => {
-  if (allUsers.length > 0){
-    // console.log('All Users : ', allUsers)
-    let resultdata = allUsers
-    if (filter_mail){
-      resultdata = resultdata.filter((user) => {
-        return user.email.includes(filter_mail)
-      });
-    }
-    if (filter_status){
-      resultdata = resultdata.filter((user) => {
-        return user.user_status == filter_status
-      });
-    }
+    if (allUsers.length > 0){
+      
+      let resultdata = allUsers
+      if (filter_mail){
+        resultdata = resultdata.filter((user) => {
+          return user.email.includes(filter_mail)
+        });
+      }
+      if (filter_status){
+        resultdata = resultdata.filter((user) => {
+          return user.user_status == filter_status
+        });
+      }
 
-    resultdata = resultdata.filter((user) => {
-      return user.user_role == 'Administrator'
-    });
-
-    loadfromUserRows(resultdata)
-  }
+      resultdata = resultdata.filter((user) => {
+        return user.user_role == 'Administrator' || user.user_role == 'Program Manager'
+      });
+      // console.log('All Users : ', resultdata)
+      loadfromUserRows(resultdata)
+    }
   }
   
   React.useEffect(() => {
     let active = true;
 
-    loadSeverUserData();
+    loadDomainlist();
 
     return () => {
       active = false
     }
-  }, [page, data, pageSize, props.reload])
+  }, [page, prop_data, pageSize, props.reload])
+
+  React.useEffect(() => {
+    loadSeverData()
+  }, [domainlist])
 
   React.useEffect(() => {
     filterUserData(props.email, props.status);
@@ -188,6 +237,7 @@ export function UsersDT(props) {
       email: data.email,
       first_name: data.first_name,
       last_name: data.last_name,
+      domain: data.domain,
       user_role: data.user_role,
       user_status: data.user_status,
       user_permissions: data.user_permissions,
@@ -214,13 +264,13 @@ export function UsersDT(props) {
         columns={columns}
         autoHeight
         pagination
-        pageSize={10}
+        pageSize={pageSize}
         rowsPerPageOptions={[5, 10, 20]}
-        onPageSizeChange={({ page, pageCount, pageSize, rowCount }) => {
-          setPageSize(pageSize)
+        onPageSizeChange={(pagesize) => {
+          setPageSize(pagesize)
         }}
-        rowCount={100}
-        checkboxSelection
+        rowCount={rowCount}
+        
         paginationMode="server"
         onPageChange={handlePageChange}
         loading={loading}
@@ -278,9 +328,10 @@ class Users extends React.Component {
       'Authorization': beartoken
     };
     
-    const urlAPI = serverURL + '/api/deleteuser/' + this.state.del_row.user_id
+    const urlAPI = serverURL + '/api/admin/deleteuser/' + this.state.del_row.user_id
     const body = {
       user_id: this.state.del_row.user_id,
+      domain: this.state.del_row.domain
     };
     
     this.setState({ showLoader: true })
@@ -294,13 +345,12 @@ class Users extends React.Component {
               })
             }
           } else{
-            this.setState({ showLoader: false})
             if (this.alertRef.current) {
-              this.alertRef.current.showDialog('', 'This user has deleted', () => {
+              this.alertRef.current.showDialog('', 'A user has deleted', () => {
                 this.setState({reload: !this.state.reload})
               })
             } else {
-              this.setState({reload: !this.state.reloadue})
+              this.setState({reload: !this.state.reload})
             }
           }
         })
@@ -309,6 +359,9 @@ class Users extends React.Component {
           let err_str = error.toString()
           if (error.response){
             err_str = error.response.data.message
+          }
+          if (err_str.length < 5){
+            err_str = "Network Error"
           }
           if (this.alertRef.current) {
             this.alertRef.current.showDialog('', err_str, () => {
@@ -326,11 +379,11 @@ class Users extends React.Component {
     const { userData, classes } = this.props
 
     return (
-        <MainLayout menuIndex={5} loader={this.state.showLoader}>
+        <MainLayout menuIndex={3} loader={this.state.showLoader}>
           <Grid
             container
             spacing={3}
-            style={{ maxWidth: 950, marginLeft: 'auto', marginRight: 'auto' }}
+            style={{ maxWidth: 1130, marginLeft: 'auto', marginRight: 'auto' }}
           >
             <Grid item sm={6}>
               <div

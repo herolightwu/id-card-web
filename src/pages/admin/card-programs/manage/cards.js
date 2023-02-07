@@ -61,6 +61,7 @@ export function BlinxCardsDT({}) {
   const [page, setPage] = React.useState(0)
   const [rows, setRows] = React.useState([])
   const [pageSize, setPageSize] = React.useState(10)
+  const [rowCount, setRowCount] = React.useState(100)
 
   const [loading, setLoading] = React.useState(false)
 
@@ -84,7 +85,6 @@ export function BlinxCardsDT({}) {
       }
       // console.log('data.columns: ', data.columns)
       // console.log('newRows : ', newRows)
-
       setRows(newRows)
       setLoading(false)
     })()
@@ -109,12 +109,12 @@ export function BlinxCardsDT({}) {
         columns={columns}
         autoHeight
         pagination
-        pageSize={10}
+        pageSize={pageSize}
         rowsPerPageOptions={[5, 10, 20]}
-        onPageSizeChange={({ page, pageCount, pageSize, rowCount }) => {
+        onPageSizeChange={(pageSize) => {
           setPageSize(pageSize)
         }}
-        rowCount={100}
+        rowCount={rowCount}
         checkboxSelection
         paginationMode="server"
         onPageChange={handlePageChange}
@@ -161,7 +161,7 @@ class CardPrograms extends React.Component {
     const { userData, classes } = this.props
 
     return (
-      <MainLayout menuIndex={5}>
+      <MainLayout menuIndex={3}>
         <Grid
           container
           spacing={3}

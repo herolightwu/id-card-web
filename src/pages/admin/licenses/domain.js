@@ -201,7 +201,6 @@ export class DomainView extends React.Component {
               })
             }
           } else{
-            this.setState({ showLoader: false})
             if (this.alertRef.current) {
               this.alertRef.current.showDialog('', 'This domain has deleted', () => {
                 navigate('/admin/licenses/domains')
@@ -216,6 +215,9 @@ export class DomainView extends React.Component {
           let err_str = error.toString()
           if (error.response){
             err_str = error.response.data.message
+          }
+          if (err_str.length < 5){
+            err_str = "Network Error"
           }
           if (this.alertRef.current) {
             this.alertRef.current.showDialog('', err_str, () => {
@@ -367,7 +369,7 @@ export default function(props) {
   return (
     <DomainView
       {...props}
-      menuIndex={5}
+      menuIndex={3}
       dispatch={dispatch}
       isDesktop={isDesktop}
       classes={classes}

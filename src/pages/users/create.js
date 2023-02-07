@@ -23,7 +23,7 @@ export default function UserCreate(props) {
   return (
     <UserView
       {...props}
-      menuIndex={4}
+      menuIndex={2}
       isAdd={true}
       dispatch={dispatch}
       isDesktop={isDesktop}

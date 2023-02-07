@@ -1,9 +1,11 @@
 import React, { useRef, useEffect } from 'react'
+import Constants from '../../utils/constants'
 
 export default function Canvas ({
     pixel_data = [],
     width,
     height,
+    printed_size,
     onBarcode,
     ...rest
 }) {
@@ -19,8 +21,12 @@ export default function Canvas ({
             for (index = 0; index < pixel_data.length; index++){
                 mImgData.data[index] = pixel_data[index]
             }
-            ctx.putImageData(mImgData, 4, 4) //, 0, 0, width, height
-            console.log("Image data  :", mImgData);
+            // console.log("Image data  :", mImgData);
+            if (printed_size === "small"){
+                ctx.putImageData(mImgData, 4, 4, 0, 0, Constants.barCode.small_size*2, Constants.barCode.small_size*2)
+            } else {
+                ctx.putImageData(mImgData, 4, 4, 0, 0, Constants.barCode.large_size*2, Constants.barCode.large_size*2)
+            }
         } 
     }
 

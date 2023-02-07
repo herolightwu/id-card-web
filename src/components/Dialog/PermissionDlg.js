@@ -25,7 +25,7 @@ export default function PermissionDlg({
     'Cards Print',
     'Cards Reject',
     'NFC Write',
-    'Permission 7',
+    'Batch Loading',
     'Permission 8',
     'Permission 9',
     'Permission 10',

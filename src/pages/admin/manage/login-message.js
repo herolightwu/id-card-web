@@ -89,7 +89,7 @@ class LoginMessage extends React.Component {
     const { userData, classes } = this.props
 
     return (
-      <MainLayout menuIndex={5}>
+      <MainLayout menuIndex={3}>
         <Container maxWidth="sm">
           <Paper elevation={0}>
             <div style={{ width: '100%', textAlign: 'left' }}>

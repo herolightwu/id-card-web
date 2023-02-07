@@ -25,8 +25,8 @@ import { VColor } from '../../utils/constants'
 import Utils from '../../utils/utils'
 
 const menuItems_admin = [
-  { label: 'SCAN CARD', link: '/scan-card' },
-  { label: 'NFC READ', link: '/nfc-read' },
+  // { label: 'SCAN CARD', link: '/scan-card' },
+  // { label: 'NFC READ', link: '/nfc-read' },
   { label: 'ORDER CARD', link: '/order-card' },
   { label: 'MANAGE CARDS', link: '/manage-cards' },
   { label: 'USERS', link: '/users' },
@@ -35,15 +35,15 @@ const menuItems_admin = [
 ]
 
 const menuItems_holder = [
-  { label: 'SCAN CARD', link: '/scan-card' },
-  { label: 'NFC READ', link: '/nfc-read' },
+  // { label: 'SCAN CARD', link: '/scan-card' },
+  // { label: 'NFC READ', link: '/nfc-read' },
   { label: 'ORDER CARD', link: '/order-card' },
   { label: 'CHANGE PASSWORD', link: '/change-password' },
 ]
 
 const menuItems = [
-  { label: 'SCAN CARD', link: '/scan-card' },
-  { label: 'NFC READ', link: '/nfc-read' },
+  // { label: 'SCAN CARD', link: '/scan-card' },
+  // { label: 'NFC READ', link: '/nfc-read' },
   { label: 'ORDER CARD', link: '/order-card' },
   { label: 'MANAGE CARDS', link: '/manage-cards' },
   { label: 'USERS', link: '/users' },

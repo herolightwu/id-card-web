@@ -27,7 +27,7 @@ export default function AdminUserCreate(props) {
   return (
     <UserView
       {...props}
-      menuIndex={5}
+      menuIndex={3}
       isAdd={true}
       dispatch={dispatch}
       isDesktop={isDesktop}

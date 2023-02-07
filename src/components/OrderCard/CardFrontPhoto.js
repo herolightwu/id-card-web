@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
 import useStyles from '../../utils/styles'
+import axios from 'axios'
 
 import { Fade, Grid, Paper, Button } from '@material-ui/core'
 import CardFront from '../../assets/images/card-front.png'
 import Constants, { VColor } from '../../utils/constants'
 import { useTheme } from '@material-ui/core'
 import PhotoPickerDlg from '../../components/Dialog/PhotoPickerDlg'
-import RestAPI, {uploadedDirUrl} from '../../utils/RestAPI'
+import {serverURL, cryptoURL} from '../../utils/RestAPI'
 
 export default function CardFrontPhoto ({
   editMode = true,
@@ -44,17 +45,32 @@ export default function CardFrontPhoto ({
     setCurImg(img)
     loadData(img)
     setOpenPicker(false)
-    try {
-      const res = await RestAPI.generalPost('api/compress_image', { file: img })
-      //console.log('res:', res)
-      if (res.status == 'success') {
-        setWebp(res.webp)
-        setUploadedPicture(img)
-        setIsPicked(true)
-      }
-    } catch (ex) {
-      console.log('Ex at upload base64: ', ex)
+    const urlAPI = serverURL + '/api/compress_image' 
+    const token = localStorage.getItem('token')
+    const beartoken = 'Bearer ' + token
+    const headers = {
+      Authorization: beartoken,
     }
+    let body = {}
+    body['file'] = img
+    axios
+      .post(urlAPI, body, { headers })
+      .then(response => {
+        if (response.data.status === 'success' && response.data.webp.length > 0) { 
+          setWebp(response.data.webp)
+          setUploadedPicture(img)
+          setIsPicked(true)
+        } else {            
+          console.log('There is no encoded data')
+        }
+      })
+      .catch((error) => {
+        let err_str = error.toString()
+        if (error.response){
+          err_str = error.response.data.message
+        }
+        console.log('Ex at upload base64: ', err_str)
+      })
   }
 
 //`${uploadedDirUrl}${webp}`

@@ -123,7 +123,7 @@ handleChangecfrmPwd = event => {
     const { userData, classes } = this.props
 
     return (
-      <MainLayout menuIndex={6} loader={this.state.showLoader}>
+      <MainLayout menuIndex={4} loader={this.state.showLoader}>
         <Container maxWidth="sm"className={classes.rootContainer}>
           <Grid container spacing={3} style={{ marginTop: 20 }}>
             <Grid item lg={12} md={12} sm={12} xs={12}>

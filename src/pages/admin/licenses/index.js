@@ -77,6 +77,7 @@ export function LicenseDT(props) {
   const [rows, setRows] = React.useState([])
     
   const [pageSize, setPageSize] = React.useState(10)
+  const [rowCount, setRowCount] = React.useState(100)
 
   const [loading, setLoading] = React.useState(false)
 
@@ -173,6 +174,7 @@ export function LicenseDT(props) {
       item.id = item.license_id
       return item;
     })
+    setRowCount(domaindata.length)
     setRows(newCards);
    }
 
@@ -217,7 +219,7 @@ export function LicenseDT(props) {
    }, [page, data, pageSize, props.reload])
 
   React.useEffect(() => {
-  filterData(props.domain_name);
+    filterData(props.domain_name);
   }, [props.domain_name, allData])
 
   const gotoView = data => {
@@ -251,13 +253,13 @@ return (
       columns={columns}
       autoHeight
       pagination
-      pageSize={10}
+      pageSize={pageSize}
       rowsPerPageOptions={[5, 10, 20]}
-      onPageSizeChange={({ page, pageCount, pageSize, rowCount }) => {
+      onPageSizeChange={(pageSize) => {
         setPageSize(pageSize)
       }}
       
-      rowCount={100}
+      rowCount={rowCount}
       paginationMode="server"
       onPageChange={handlePageChange}
       loading={loading}
@@ -328,7 +330,6 @@ class Licenses extends React.Component {
               })
             }
           } else{
-            this.setState({ showLoader: false})
             if (this.alertRef.current) {
               this.alertRef.current.showDialog('', 'This license has deleted', () => {
                 this.setState({reload: !this.state.reload})
@@ -343,6 +344,9 @@ class Licenses extends React.Component {
           let err_str = error.toString()
           if (error.response){
             err_str = error.response.data.message
+          }
+          if (err_str.length < 5){
+            err_str = "Network Error"
           }
           if (this.alertRef.current) {
             this.alertRef.current.showDialog('', err_str, () => {
@@ -360,7 +364,7 @@ class Licenses extends React.Component {
     const { userData, classes } = this.props
 
     return (
-        <MainLayout menuIndex={5} loader={this.state.showLoader}>
+        <MainLayout menuIndex={3} loader={this.state.showLoader}>
           <Grid
             container
             spacing={3}

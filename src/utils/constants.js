@@ -48,6 +48,8 @@ export const Constants = {
     preview_size_per_pixel:1,
     size_per_pixel:2,
     color_size:4,
+    small_size: 60,
+    large_size: 114,
   }
 } 
 

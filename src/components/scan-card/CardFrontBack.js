@@ -7,7 +7,7 @@ import Constants, { VColor } from '../../utils/constants'
 import { useTheme } from '@material-ui/core'
 import PhotoPickerDlg from '../../components/Dialog/PhotoPickerDlg'
 import Canvas from '../../components/OrderCard/Canvas'
-import RestAPI from '../../utils/RestAPI'
+import {serverURL} from '../../utils/RestAPI'
 
 
 export default function CardFrontBack({ 
@@ -26,8 +26,12 @@ export default function CardFrontBack({
   ordered_date = '',
   created_user={},
   barcode = '',
+  printed_size = "small",
+  text_one = '',
+  text_two = '',
   onChanged,
  }) {
+  
   const classes = useStyles()
   const theme = useTheme()
   const transitionDuration = {
@@ -44,22 +48,37 @@ export default function CardFrontBack({
 
   const changePhoto = async changed_img => {
     setOpenPicker(false)
-    try {
-      const res = await RestAPI.generalPost('api/compress_image', { file: changed_img })
-      if (res.status == 'success') {
-        setCurWebp(res.webp)
-        setCurPhoto(changed_img)
-        if (onChanged){
-          onChanged(res.webp, changed_img)
-        }
-      }
-    } catch (ex) {
-      console.log('Ex at upload base64: ', ex)
+    const urlAPI = serverURL + '/api/compress_image' 
+    const token = localStorage.getItem('token')
+    const beartoken = 'Bearer ' + token
+    const headers = {
+      Authorization: beartoken,
     }
+    let body = {}
+    body['file'] = changed_img
+    axios
+      .post(urlAPI, body, { headers })
+      .then(response => {
+        if (response.data.status === 'success' && response.data.webp.length > 0) { 
+          setCurWebp(response.data.webp)
+          setCurPhoto(changed_img)
+          if (onChanged){
+            onChanged(response.data.webp, changed_img)
+          }
+        } else { 
+          console.log('There is no encoded data')
+        }
+      })
+      .catch((error) => {
+        let err_str = error.toString()
+        if (error.response){
+          err_str = error.response.data.message
+        }
+        console.log('Ex at upload base64: ', err_str)
+      })
   }
 
   const showVericode = async enc_data => {
-    console.log("matrix_size  :", matrix_size);
     let barcode_size = matrix_size;
     let size_per_width = barcode_size * Constants.barCode.preview_size_per_pixel
     let buf_size = size_per_width * size_per_width * Constants.barCode.color_size
@@ -77,7 +96,7 @@ export default function CardFrontBack({
           buf_data[offset+j+1] = 0      //G value
           buf_data[offset+j+2] = 0      //B value
           buf_data[offset+j+3] = 255      //Alpha
-        } else {
+        } else if (enc_data[index] === '0'){
           buf_data[offset+j] = 255      //R value
           buf_data[offset+j+1] = 255      //G value
           buf_data[offset+j+2] = 255     //B value
@@ -90,6 +109,7 @@ export default function CardFrontBack({
   }
 
   React.useEffect(()=>{
+    console.log("text:", text_one, text_two)
     showVericode(barcode)
     setCurPhoto(photo)
     setCurWebp(webp)
@@ -110,10 +130,9 @@ export default function CardFrontBack({
             src={program_front}
             ref={el => {
               if (!el) {
-                // console.log('el is null')
                 return
               }
-              console.log(el.getBoundingClientRect().width) // prints 200px
+              // console.log(el.getBoundingClientRect().width) // prints 200px
             }}
             style={{
               width: '100%',
@@ -140,17 +159,15 @@ export default function CardFrontBack({
             src={program_back}
             ref={el => {
               if (!el) {
-                // console.log('el is null')
                 return
               }
-              console.log(el.getBoundingClientRect().width) // prints 200px
+              // console.log(el.getBoundingClientRect().width) // prints 200px
             }}
             style={{
               width: '100%',
               position: 'absolute',
               top: 0,
               left: 0,
-              // objectFit: 'contain',
               borderRadius: 7,
             }}
           />
@@ -169,20 +186,6 @@ export default function CardFrontBack({
         >
           <div
             style={{
-              width: '100%',
-              textAlign: 'left',
-            }}
-          >
-            <img
-              src={logo}
-              style={{
-                width: '15%',
-                objectFit: 'contain',
-              }}
-            />
-          </div>
-          <div
-            style={{
               position: 'absolute',
               bottom: 0,
               right: 0,
@@ -196,34 +199,44 @@ export default function CardFrontBack({
           >
             <div
               style={{
-                position: 'absolute',
-                bottom: 0,
-                right: 0,
-                left: 0,
+                width:'100%',
+                display: 'flex'
               }}
             >
-              <div>
-                <span className={classes.cardTitle}>{first_name.slice(0,1).toUpperCase() + '. ' + (middle_name ? middle_name + ' ':'') + last_name}</span>
-                <span
-                  className={classes.cardNumber}
-                  style={{ display: 'block' }}
-                >
-                  {/* {program_id + '0' + (card_id + '').padStart(10,'0')} */}
-                  {card_id}
-                </span>
-              </div>
-
-              <div style={{ resize: 'vertical', heihgt: 'auto' }}>
-                <img
-                  src={!!curWebp && 'data:image/webp;base64,' + curWebp}
+              <img
+                  src={!!curPhoto && curPhoto}
                   style={{
                     width: `${Constants.cardSize.photoRate * 100}%`,                    
                     objectFit: 'contain',
                     aspectRatio:1,
-                    margin: 0,
-                    marginBottom: -8,
+                    paddingRight: 4,
+                    marginBottom: 0,
                   }}
                 />
+              {/* src={!!curWebp && 'data:image/webp;base64,' + curWebp} */}
+              <div 
+                style={{
+                  marginTop: '-5px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignContent:'flex-start'
+              }}>
+                {/* <img
+                  src={logo}
+                  style={{
+                    width: '12%',
+                    objectFit: 'contain',
+                    marginBottom: 8
+                  }}
+                /> */}
+                <span className={classes.cardTitle}>{first_name + ' ' + (middle_name ? middle_name + ' ':'') + last_name}</span>
+                {/* first_name.slice(0,1).toUpperCase() + '. ' */}
+                <span className={classes.cardNumber}>
+                  {/* {program_id + '0' + (card_id + '').padStart(10,'0')} */}
+                  {card_id? "ID: " + card_id : ''}
+                </span>
+                <span className={classes.cardTitle}>{text_one}</span>
+                <span className={classes.cardTitle}>{text_two}</span>
               </div>
             </div>
             <div
@@ -244,13 +257,14 @@ export default function CardFrontBack({
                   position: 'absolute',
                   bottom: 0,
                   right: 0,
-                  marginRight: 4,
+                  marginRight: 0,
                   marginBottom: -2,
                 }}>
                 <Canvas 
                     pixel_data={barcodeBuf}
                     width = {matrix_size * Constants.barCode.preview_size_per_pixel}
                     height = {matrix_size * Constants.barCode.preview_size_per_pixel} 
+                    printed_size = {printed_size}
                     onBarcode = {(barcode_img) => {
                       //setBarcodeImg(barcode_img)
                     }}/>

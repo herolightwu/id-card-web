@@ -80,6 +80,7 @@ export class ViewCardProgram extends React.Component {
       logo_img: cardLogo,
       program_name: '',
       matrix_size: 0,
+      printed_size: "small",
       compression : '0',
       edac : 0,
       pixels_cell: 2,
@@ -155,7 +156,8 @@ export class ViewCardProgram extends React.Component {
       pixels_cell: this.props.location.state.pxpcw,
       sample_width: this.props.location.state.sampleWidth,
       matrix_array: mat_array,
-      domain_name : this.props.location.state.domain
+      domain_name : this.props.location.state.domain,
+      printed_size: this.props.location.state.printed_size,
     })
     
     this.programname = this.props.location.state.program_name     
@@ -252,7 +254,6 @@ export class ViewCardProgram extends React.Component {
               })
             }
           } else{
-            this.setState({ showLoader: false})
             if (this.alertRef.current) {
               this.alertRef.current.showDialog('', 'This card program has deleted', () => {
                 navigate('/admin/card-programs/')
@@ -267,6 +268,9 @@ export class ViewCardProgram extends React.Component {
           let err_str = error.toString()
           if (error.response){
             err_str = error.response.data.message
+          }
+          if (err_str.length < 5){
+            err_str = "Network Error"
           }
           if (this.alertRef.current) {
             this.alertRef.current.showDialog('', err_str, () => {
@@ -359,9 +363,9 @@ export class ViewCardProgram extends React.Component {
       sample_width: this.state.sample_width,
       prefilter:this.state.prefiltering,
       user:userid,
-      domain: this.state.domain_name
+      domain: this.state.domain_name,
+      printed_size: this.state.printed_size
     }
-    // console.log("body: ", body)
 
     if (this.state.isCreateMode) {
       this.setState({ showLoader: true })
@@ -742,10 +746,32 @@ export class ViewCardProgram extends React.Component {
               }}
               elevation={0}>
                 <div>
-                  <div>
+                <div>
                     <Typography variant="h6" style={{ fontWeight: 'medium' }}>
                       Vericode Features :
                     </Typography>
+                  </div>
+                  <div style={{
+                    padding: 10,
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'row', 
+                    justifyContent: 'center',
+                  }}>
+                      <InputLabel id="select-printed" style={{paddingTop: 10, width:'40%'}}>Printed Size : </InputLabel>
+                      <Select 
+                        style={{width:'60%'}}
+                        labelId="select-printed"
+                        id="select-printed"
+                        value={this.state.printed_size}
+                        onChange={e => {
+                          this.setState({printed_size : e.target.value })
+                          console.log("printed_size : ", e.target.value)
+                        }}
+                      >
+                        <MenuItem value={'small'} key={'1'}>Small</MenuItem>
+                        <MenuItem value={'large'} key={'2'}>Large</MenuItem>
+                      </Select>                  
                   </div>
                   <div style={{
                     padding: 10,
@@ -1083,7 +1109,7 @@ export default function(props) {
   return (
     <ViewCardProgram
       {...props}
-      menuIndex={5}
+      menuIndex={3}
       dispatch={dispatch}
       isDesktop={isDesktop}
       //   userData={userData}

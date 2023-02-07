@@ -123,7 +123,7 @@ class SelectCard extends React.Component {
     const { userData, classes } = this.props
 
     return (
-      <MainLayout menuIndex={2}>
+      <MainLayout menuIndex={0}>
         <Grid
           container
           justify="center"
@@ -146,11 +146,12 @@ class SelectCard extends React.Component {
                   xs={12}
                   style={{
                     display: 'flex',
-                    flexDirection: 'row',
+                    flexDirection: 'column',
                     justifyContent: 'center',
                     alignItems: 'center',
                   }}
                 >
+                  <span className={classes.cardTitle}>{one.program_name}</span>
                   <Paper elevation={4}>
                     <ButtonBase onClick={() => this.onTapCard(one)}>
                       <img

@@ -25,7 +25,7 @@ const API_URL = serverURL + '/api/domains/';
 export function DomainDT(props) {  
   var datarows = props.data;
 
-   const data = React.useRef({
+  const data = React.useRef({
    columns: columns,
    rows : datarows,
    rowLength: 100,
@@ -69,6 +69,7 @@ export function DomainDT(props) {
   const [rows, setRows] = React.useState([])
     
   const [pageSize, setPageSize] = React.useState(10)
+  const [rowCount, setRowCount] = React.useState(100)
 
   const [loading, setLoading] = React.useState(false)
 
@@ -109,6 +110,7 @@ const loadfromRows = (domaindata) => {
     item.id = item.domain_id
     return item;
   })
+  setRowCount(domaindata.length)
   setRows(newCards);
 }
 
@@ -164,13 +166,13 @@ return (
       columns={columns}
       autoHeight
       pagination
-      pageSize={10}
+      pageSize={pageSize}
       rowsPerPageOptions={[5, 10, 20]}
-      onPageSizeChange={({ page, pageCount, pageSize, rowCount }) => {
+      onPageSizeChange={(pageSize) => {
         setPageSize(pageSize)
       }}
       
-      rowCount={100}
+      rowCount={rowCount}
       paginationMode="server"
       onPageChange={handlePageChange}
       loading={loading}
@@ -241,7 +243,6 @@ class Domains extends React.Component {
               })
             }
           } else{
-            this.setState({ showLoader: false})
             if (this.alertRef.current) {
               this.alertRef.current.showDialog('', 'This domain has deleted', () => {
                 this.setState({reload: !this.state.reload})
@@ -256,6 +257,9 @@ class Domains extends React.Component {
           let err_str = error.toString()
           if (error.response){
             err_str = error.response.data.message
+          }
+          if (err_str.length < 5){
+            err_str = "Network Error"
           }
           if (this.alertRef.current) {
             this.alertRef.current.showDialog('', err_str, () => {
@@ -273,7 +277,7 @@ class Domains extends React.Component {
     const { userData, classes } = this.props
 
     return (
-        <MainLayout menuIndex={5} loader={this.state.showLoader}>
+        <MainLayout menuIndex={3} loader={this.state.showLoader}>
           <Grid
             container
             spacing={3}
@@ -325,7 +329,7 @@ class Domains extends React.Component {
             </Grid>
             { this.state.create_roles ? 
               <Grid container spacing={3} style={{maxWidth: 1400,marginLeft:'auto', marginRight:'auto'}}>
-                <Grid item md={2} sm={3} xs={12}>
+                <Grid item>
                   <Button
                     variant="contained"
                     size="medium"
