@@ -50,6 +50,12 @@ export const Constants = {
     color_size:4,
     small_size: 60,
     large_size: 114,
+  },
+
+  displaySide:{
+    none: 0,
+    front:1,
+    back:2
   }
 } 
 

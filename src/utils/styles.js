@@ -112,6 +112,15 @@ const useStyles = makeStyles(theme => ({
 
     cellText:{
       align: 'center'
+    },
+    
+    dispFrontBack:{
+      border:'1px solid black', 
+      width: 40, 
+      height:20, 
+      position:'absolute', 
+      right: 60, 
+      top: 25
     }
 
   }))
@@ -191,10 +200,7 @@ const useStyles = makeStyles(theme => ({
       paddingTop: 60,
       paddingBottom: 30,
     },
-  }))
-  
-
-  
+  }))  
 
 
   export default useStyles;

@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 
 import useStyles from '../../utils/styles'
-
 import { Fade, Paper, Button } from '@material-ui/core'
 import Constants, { VColor } from '../../utils/constants'
 import { useTheme } from '@material-ui/core'
@@ -27,8 +26,7 @@ export default function CardFrontBack({
   created_user={},
   barcode = '',
   printed_size = "small",
-  text_one = '',
-  text_two = '',
+  dispfields = [],
   onChanged,
  }) {
   
@@ -109,7 +107,7 @@ export default function CardFrontBack({
   }
 
   React.useEffect(()=>{
-    console.log("text:", text_one, text_two)
+    // console.log("photo:", photo)
     showVericode(barcode)
     setCurPhoto(photo)
     setCurWebp(webp)
@@ -123,7 +121,7 @@ export default function CardFrontBack({
             width: '100%',
             paddingTop: Constants.cardSize.paddingTop,
             position: 'relative',
-            borderRadius: 7,
+            borderRadius: 7
           }}
         >
           <img
@@ -139,10 +137,16 @@ export default function CardFrontBack({
               position: 'absolute',
               top: 0,
               left: 0,
-              // objectFit: 'contain',
               borderRadius: 7,
             }}
-          />
+          />          
+          <div>            
+            {
+              dispfields.map((item, index) => {
+                return(item.side == Constants.displaySide.front ? <span className={classes.cardTitle} style={{color: item.color, position: 'absolute', left: item.xpos * 100/Constants.cardSize.width + 2 + '%', top: item.ypos * 100/Constants.cardSize.height + '%'}}>{item.label=='Member ID'||item.label=='Card ID' ?  "ID: " + item.value : item.label + " : " + item.value}</span> : null)
+              })
+            }
+          </div>
         </div>
       </Paper>      
       <Paper
@@ -171,6 +175,13 @@ export default function CardFrontBack({
               borderRadius: 7,
             }}
           />
+          <div>            
+            {
+              dispfields.map((item, index) => {
+                return(item.side == Constants.displaySide.back ? <span className={classes.cardTitle} style={{color: item.color, position: 'absolute', left: item.xpos * 100/Constants.cardSize.width + 2 + '%', top: item.ypos * 100/Constants.cardSize.height + '%'}}>{item.label=='Member ID'||item.label=='Card ID' ?  "ID: " + item.value : item.label + " : " + item.value}</span> : null)
+              })
+            }
+          </div>
         </div>        
         <div
           style={{
@@ -204,7 +215,7 @@ export default function CardFrontBack({
               }}
             >
               <img
-                  src={!!curPhoto && curPhoto}
+                  src={!!curPhoto && curPhoto.length < 100 ? serverURL+'/uploads/'+ curPhoto: curPhoto }
                   style={{
                     width: `${Constants.cardSize.photoRate * 100}%`,                    
                     objectFit: 'contain',
@@ -221,22 +232,11 @@ export default function CardFrontBack({
                   flexDirection: 'column',
                   alignContent:'flex-start'
               }}>
-                {/* <img
-                  src={logo}
-                  style={{
-                    width: '12%',
-                    objectFit: 'contain',
-                    marginBottom: 8
-                  }}
-                /> */}
                 <span className={classes.cardTitle}>{first_name + ' ' + (middle_name ? middle_name + ' ':'') + last_name}</span>
                 {/* first_name.slice(0,1).toUpperCase() + '. ' */}
-                <span className={classes.cardNumber}>
-                  {/* {program_id + '0' + (card_id + '').padStart(10,'0')} */}
+                {/* <span className={classes.cardNumber}>
                   {card_id? "ID: " + card_id : ''}
-                </span>
-                <span className={classes.cardTitle}>{text_one}</span>
-                <span className={classes.cardTitle}>{text_two}</span>
+                </span> */}
               </div>
             </div>
             <div
@@ -278,7 +278,7 @@ export default function CardFrontBack({
 
       <div style={{ marginTop: 20, position: 'relative' }}>
         <img
-          src={curPhoto}
+          src={!!curPhoto && curPhoto.length < 100 ? serverURL+'/uploads/'+ curPhoto: curPhoto }
           style={{ width: '100%', objectFit: 'contain', marginBottom: 10 }}
         />
         <Fade in={editMode}>

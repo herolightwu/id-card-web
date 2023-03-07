@@ -90,6 +90,7 @@ export class ViewCardProgram extends React.Component {
       domainlist: [],
       domain_name: '',
       openDeleteConfirm: false,
+      openDisableConfirm: false
     }
     this.alertRef = React.createRef()
     this.programname = ''
@@ -348,6 +349,14 @@ export class ViewCardProgram extends React.Component {
     if (this.state.serverFields.length > 0){
       allfields = allfields.concat(this.state.serverFields)
     }
+
+    // console.log("allfields: ", allfields)
+    let jsonbarcode = {}
+    allfields.map((one, index) => {
+      jsonbarcode[index] = one.label
+    })
+    // console.log("jsonbarcode: ", jsonbarcode)
+    // return
     
     const body = {
       program_id: this.props.location.state.program_id,
@@ -364,7 +373,8 @@ export class ViewCardProgram extends React.Component {
       prefilter:this.state.prefiltering,
       user:userid,
       domain: this.state.domain_name,
-      printed_size: this.state.printed_size
+      printed_size: this.state.printed_size,
+      jsonbarcode: jsonbarcode
     }
 
     if (this.state.isCreateMode) {
@@ -574,6 +584,7 @@ export class ViewCardProgram extends React.Component {
                           const label = one.label
                           this.onDeleteCardFields(label)
                         }}
+                        display={one.side}
                       />
                     )
                   })
@@ -1065,7 +1076,7 @@ export class ViewCardProgram extends React.Component {
 
         <AddFieldDlg
           open={this.state.openCardFieldsAdd}
-          onAdd={(label, type) => {
+          onAdd={(label, type, side, xpos, ypos, txtcolor, txtsize) => {
             const newList = [
               ...this.state.cardFields,
               {
@@ -1073,7 +1084,12 @@ export class ViewCardProgram extends React.Component {
                 placeholder: label,
                 type: type,
                 extend: false,
-                removable: true
+                removable: true,
+                side: side,
+                xpos: xpos,
+                ypos: ypos,
+                color: txtcolor,
+                size: txtsize
               },
             ]
             this.setState({ cardFields: newList, openCardFieldsAdd: false })

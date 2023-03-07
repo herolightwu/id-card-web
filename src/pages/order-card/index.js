@@ -53,6 +53,7 @@ class SelectCard extends React.Component {
                 sample_width: row.sample_width,
                 logo: row.logo,
                 program_template: row.program_template,
+                jsonbarcode: row.jsonbarcode,
                 created_date: row.created_date
               }
               const isAdmin = localStorage.getItem('user_role') === 'Administrator'
@@ -74,7 +75,7 @@ class SelectCard extends React.Component {
           return null;
         }) 
         .finally(()=>{
- //         setLoading(false)
+          // setLoading(false)
         })
       }, Math.random() * 500 + 100) // simulate network latency
     })
@@ -93,8 +94,7 @@ class SelectCard extends React.Component {
     const roles = localStorage.getItem('user_role')
 
     console.log('permission : ', permissions['cards_order'])
-    // console.log('permission : ', programs[selCard.program_name])
-
+    
     let isPass = false
     if(permissions['cards_order'] && programs[selCard.program_name]){
       isPass = true   

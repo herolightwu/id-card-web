@@ -22,6 +22,7 @@ import FilledTextInput from '../../components/scan-card/FilledTextInput'
 import CardFrontPhoto from '../../components/OrderCard/CardFrontPhoto'
 import AlertDialog from '../../components/Dialog/AlertDialog'
 import { ConfirmDlg } from '../../components/Dialog/PhotoPickerDlg'
+import LoadFileDlg from '../../components/Dialog/LoadFileDlg'
 import { serverURL, cryptoURL} from '../../utils/RestAPI'
 import Canvas from '../../components/OrderCard/Canvas'
 import papa from 'papaparse'
@@ -100,6 +101,7 @@ export class OrderCard extends React.Component {
     this.alertRef = React.createRef()
     this.linkRef = React.createRef()
     this.hiddenFileInput = React.createRef()
+    this.hiddenZipInput = React.createRef()
 
     this.state = {
       isLogin: true,
@@ -120,7 +122,9 @@ export class OrderCard extends React.Component {
       showCodeLabel:false,
       unique_id: '',
       isBatch: false,
-      bearer_token: ''
+      bearer_token: '',
+      openBatchDlg: false,
+      bZipLoad: false,
     }
     
   }
@@ -142,11 +146,12 @@ export class OrderCard extends React.Component {
     const { dispatch, userData, basicData, selCard } = this.props
     
     formFields = selCard.program_template
+    // console.log("template : ", formFields)
     for(let ind = 0; ind < formFields.length; ind++){
       formFields[ind].name = formFields[ind].label.toString().toLowerCase().replace(/\s/g, '_')
     }
+    
     const uid = String( Date.now().toString(32) + Math.random().toString(16)).replace(/\./g, '')
-    // console.log("unique_id : ", uid)
     const isUser = localStorage.getItem('user_role') === 'User'
     const token = localStorage.getItem('token')
     const beartoken = 'Bearer ' + token
@@ -160,7 +165,7 @@ export class OrderCard extends React.Component {
     this.setState({
       loader:true
     })
-    let barcode_size = this.props.selCard.matrix_size;  //114
+    let barcode_size = this.props.selCard.matrix_size;
     let size_per_width = barcode_size * Constants.barCode.size_per_pixel
     let buf_size = size_per_width * size_per_width * Constants.barCode.color_size
     let buf = new ArrayBuffer(buf_size);
@@ -202,7 +207,7 @@ export class OrderCard extends React.Component {
 
   onSave = () => {
     const userid = localStorage.getItem('userId')
-    const urlAPI = serverURL + '/api/encode' 
+    const urlAPI = cryptoURL + '/api/encode' 
     var fields = this.state.formFields
 
     let isValid = true;
@@ -229,7 +234,6 @@ export class OrderCard extends React.Component {
       return
     }
 
-    var body = {}
     let code_fields = {}
     let server_fields = {}
     for (let i = 0; i < fields.length; i++) {
@@ -240,27 +244,42 @@ export class OrderCard extends React.Component {
       }
     }
 
-  let bNoImageInCode = false
-    if (this.props.selCard.matrix_size < 114){
+    let bNoImageInCode = false
+    if (this.props.selCard.matrix_size < 96){
       bNoImageInCode = true
     }
 
-    body['unique_id'] = this.state.unique_id
-    body['code_fields'] = code_fields
-    body['server_fields'] = server_fields
-    body['compressed_image'] = bNoImageInCode? '' : this.state.webp
-    body['program_id'] = this.props.selCard.program_id
-    body['created_user'] = userid
-    body['modified_user'] = userid
-    body['available'] = true
-
     let req_body = {}
-    req_body['message'] = body
     req_body['matrixsize'] = this.props.selCard.matrix_size
     req_body['compression'] = this.props.selCard.compression
     req_body['edac'] = this.props.selCard.edac
+
+    // console.log ("jsonbarcode: ", this.props.selCard.jsonbarcode)
+    let enc_string = '' 
+    if (this.props.selCard.jsonbarcode){
+      enc_string = this.props.selCard.program_id + '~' + this.state.unique_id
+      for (let i = 0; i < Object.keys(this.props.selCard.jsonbarcode).length; i++){
+        for (let j = 0; j < fields.length; j++) {
+          if (fields[j].label === this.props.selCard.jsonbarcode[i + '']){        
+            enc_string = enc_string + '~' + fields[j].value
+          }
+        }
+      }
+      const webp_str = bNoImageInCode? '' : this.state.webp       //~compress_image~available
+      enc_string = enc_string + '~' + webp_str + '~' + 1
+      req_body['message'] = enc_string
+    } else {
+      let body = {}
+      body['unique_id'] = this.state.unique_id
+      body['code_fields'] = code_fields
+      body['server_fields'] = server_fields
+      body['compressed_image'] = bNoImageInCode? '' : this.state.webp
+      body['program_id'] = this.props.selCard.program_id
+      body['available'] = true
+      req_body['message'] = body
+    }
     
-    // console.log ("body: ", req_body, JSON.stringify(body).length)
+    // console.log ("req_body: ", req_body)
     // return
     const headers = {
       Authorization: this.state.bearer_token,
@@ -272,7 +291,6 @@ export class OrderCard extends React.Component {
         if (response.data.status === 'success' && response.data.data.length > 0) { 
           let enc_data = response.data.data.replace(/\u0002/g, '')
           // console.log ("body: ", response.data.data)
-          // console.log("replace: ", enc_data)
           this.setState({
             encodedData: enc_data
           })
@@ -394,17 +412,25 @@ export class OrderCard extends React.Component {
   }
 
   //----- batch order functions --------------
-  onBatchOrder = () => {
+  onLoadZip = () => {
+    this.hiddenZipInput.current.click()
+  }
+
+  onLoadCsv = () => {
     this.hiddenFileInput.current.click()
   }
 
+  onBatchOrder = () => {
+    this.setState({openBatchDlg: true})
+  }
+
   compressWebp(img) {
-    const urlAPI = serverURL + '/api/compress_image'
+    const urlAPI = serverURL + '/api/compress_image_filename'
     const headers = {
       Authorization: this.state.bearer_token,
     }
     let body = {}
-    body['file'] = img
+    body['filename'] = img
     return new Promise ((resolve, reject) => {
       axios
         .post(urlAPI, body, { headers })
@@ -435,7 +461,6 @@ export class OrderCard extends React.Component {
       this.setState({ loader: true})
       for (let i = 0; i < data_arr.length; i++){
         let one_item = data_arr[i]
-        var body = {}
         let code_fields = {}
         let server_fields = {}
         for (let j = 0; j < fields.length; j++) {
@@ -454,11 +479,11 @@ export class OrderCard extends React.Component {
         }
 
         let bNoImageInCode = false
-        if (this.props.selCard.matrix_size < 114){
+        if (this.props.selCard.matrix_size < 96){
           bNoImageInCode = true
         }
 
-        if(!one_item.Photo || one_item.Photo.length < 30){
+        if(!one_item.Photo){
           if (this.alertRef.current) {
             this.alertRef.current.showDialog('', "There is no photo. Please check the photo field of " + (i + 1) + " row")
           }
@@ -467,9 +492,11 @@ export class OrderCard extends React.Component {
         }
         
         // generate webp
+        const cur_domain = localStorage.getItem('domain')
         let webp_data = ''
         try {
-          webp_data = await this.compressWebp(one_item.Photo)
+          console.log("photo name:", cur_domain + "-" + one_item.Photo)
+          webp_data = await this.compressWebp(cur_domain + "-" + one_item.Photo)
           console.log("webp:", webp_data)
         } catch (ex) {
           if (this.alertRef.current) {
@@ -481,23 +508,39 @@ export class OrderCard extends React.Component {
 
         const uid = String( Date.now().toString(32) + Math.random().toString(16)).replace(/\./g, '')
         const userid = localStorage.getItem('userId')
-        
-        body['unique_id'] = uid
-        body['code_fields'] = code_fields
-        body['server_fields'] = server_fields
-        body['compressed_image'] = bNoImageInCode? '': webp_data
-        body['program_id'] = this.props.selCard.program_id
-        body['created_user'] = userid
-        body['modified_user'] = userid
-        body['available'] = true
-        
+
         let req_body = {}
-        req_body['message'] = body
         req_body['matrixsize'] = this.props.selCard.matrix_size
         req_body['compression'] = this.props.selCard.compression
         req_body['edac'] = this.props.selCard.edac
-        // console.log(req_body)
 
+        // console.log ("jsonbarcode: ", this.props.selCard.jsonbarcode)
+        let enc_string = '' 
+        if (this.props.selCard.jsonbarcode){
+          enc_string = this.props.selCard.program_id + '~' + uid
+          for (let i = 0; i < Object.keys(this.props.selCard.jsonbarcode).length; i++){
+            for (let j = 0; j < fields.length; j++) {
+              if (fields[j].label === this.props.selCard.jsonbarcode[i + '']){        
+                enc_string = enc_string + '~' + fields[j].value
+              }
+            }
+          }
+          
+          //~compress_image~available
+          const webp_str = bNoImageInCode? '' : webp_data       
+          enc_string = enc_string + '~' + webp_str + '~' + 1
+          req_body['message'] = enc_string
+        } else {
+          let body = {}
+          body['unique_id'] = uid
+          body['code_fields'] = code_fields
+          body['server_fields'] = server_fields
+          body['compressed_image'] = bNoImageInCode? '': webp_data
+          body['program_id'] = this.props.selCard.program_id
+          body['available'] = true
+          req_body['message'] = body
+        }        
+        
         // encode data
         let enc_data = ''
         try {
@@ -523,7 +566,7 @@ export class OrderCard extends React.Component {
         // order a card
         let order_body = {}
         order_body['unique_id'] = uid
-        order_body['face_image'] = one_item.Photo
+        order_body['face_image'] = cur_domain + "-" + one_item.Photo
         order_body['compressed_face_image'] = webp_data
         order_body['program_id'] = this.props.selCard.program_id
         order_body['code_fields'] = code_fields
@@ -534,7 +577,7 @@ export class OrderCard extends React.Component {
         order_body['modified_user'] = userid
         order_body['available'] = true
 
-        console.log('req body :', order_body)
+        // console.log('req body :', order_body)
 
         try {
           const res = await this.orderCardData(order_body)
@@ -555,7 +598,7 @@ export class OrderCard extends React.Component {
           break
         }
       }
-      this.setState({ loader: false})
+      this.setState({ loader: false, openBatchDlg: false})
       if (order_err === false){
         if (this.alertRef.current) {
           this.alertRef.current.showDialog('', data_arr.length + " cards has been ordered successfully.")
@@ -597,7 +640,7 @@ export class OrderCard extends React.Component {
 
   getEncodedData (reqParam) {
     return new Promise ((resolve, reject) => {
-      const urlAPI = serverURL + '/api/encode' 
+      const urlAPI = cryptoURL + '/api/encode' 
       const headers = {
         Authorization: this.state.bearer_token,
       }
@@ -623,7 +666,7 @@ export class OrderCard extends React.Component {
     })
   }
 
-  handleChange = event => {
+  handleCsv = event => {
     const csvfile = event.target.files[0];
     // console.log("csv file:", csvfile)
     
@@ -634,6 +677,36 @@ export class OrderCard extends React.Component {
         this.processBatchData(results.data)
       },
     })
+  }
+
+  handleZip = async (event) => {
+    const zipfile = event.target.files[0];
+    // upload zip file
+    const urlAPI = API_URL + '/uploadzip'
+    const headers = {
+      Authorization: this.state.bearer_token,
+      'Content-Type': 'multipart/form-data'
+    }
+    const formdata = new FormData()
+    formdata.append('file', zipfile)
+    formdata.append('fileName', zipfile.name)
+    
+    this.setState({ loader: true})
+    try{
+      const result = await axios
+        .post(urlAPI, formdata, { headers: headers, 
+        onUploadProgress: (data) => {
+          console.log("data : ", data.loaded, data.total)
+        },})
+      // console.log("upload status : ", result.data)
+      this.setState({bZipLoad: true, loader: false})
+    } catch (err){
+      this.setState({ loader: false})
+      if (this.alertRef.current) {
+        this.alertRef.current.showDialog('Please try again', () => {
+        })
+      }
+    }
   }
 
   downloadCSVTemplate (fname) {
@@ -659,7 +732,7 @@ export class OrderCard extends React.Component {
     }
     let data = []
     column_headers.push("Photo")
-    column_types.push("base64string")
+    column_types.push("filename")
     data.push(column_headers)
     data.push(column_types)
     let pname = this.props.selCard.program_name.replace(/ /g, '_')
@@ -819,7 +892,14 @@ export class OrderCard extends React.Component {
                     type="file"
                     accept='.csv'
                     ref={this.hiddenFileInput}
-                    onChange={this.handleChange}
+                    onChange={this.handleCsv}
+                    style={{display: 'none'}} 
+                  />
+                  <input
+                    type="file"
+                    accept='.zip'
+                    ref={this.hiddenZipInput}
+                    onChange={this.handleZip}
                     style={{display: 'none'}} 
                   />
                 </div>
@@ -878,6 +958,16 @@ export class OrderCard extends React.Component {
           onOk={this.onDone}
           onCancel={this.onCancel}
         />
+        <LoadFileDlg
+          open={this.state.openBatchDlg}
+          bLoaded={this.state.bZipLoad}
+          onLoadZip={this.onLoadZip}
+          onLoadCsv={this.onLoadCsv}
+          onCancel={()=> {
+            this.setState({openBatchDlg: false, bZipLoad: false})
+          }}
+        />
+
         <AlertDialog ref={this.alertRef} okTitle={'done'} />
         <a ref={this.linkRef}/>
         <Backdrop className={classes.backdrop} open={this.state.loader}>

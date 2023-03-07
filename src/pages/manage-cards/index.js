@@ -518,26 +518,23 @@ class ManageCards extends React.Component {
           }
         }
         
-        // let fields = defaultFields        
+        let dispfields = []     
         for(let ind = 0; ind < valFields.length; ind++){
           valFields[ind].name = valFields[ind].label.toString().toLowerCase().replace(/\s/g, '_')
-          // fields.push(valFields[ind])
+          if (!valFields[ind].extend && !!valFields[ind].side && valFields[ind].side != 0){
+            dispfields.push(valFields[ind])
+          }
         }
         // console.log("form fileds :", valFields)
         // console.log("row data : ", rowdata)
   
         let body = {}
         let mem_id = ''
-        let text_one = ''
-        let text_two = ''
-        for (let i = 4; i < valFields.length; i++) {
-          let code_fields = rowdata.code_fields
-          if (i == 4 && !valFields[i].extend && code_fields[valFields[i].name] != 'undefined'){
-            text_one = valFields[i].label + ": " + code_fields[valFields[i].name]
-          } else if(i == 5 && !valFields[i].extend && code_fields[valFields[i].name] != 'undefined'){
-            text_two = valFields[i].label + ": " + code_fields[valFields[i].name]
-          }
+        let code_fields = rowdata.code_fields
+        for(let ind = 0; ind < dispfields.length; ind++){
+          dispfields[ind].value = code_fields[dispfields[ind].name]
         }
+        
         if (rowdata.code_fields["member_id"]){
           mem_id = "ID: " + rowdata.code_fields["member_id"]
         }
@@ -558,8 +555,7 @@ class ManageCards extends React.Component {
         body['user_id'] = userid
         body['member_id'] = mem_id
         body['printed_size'] = printed_size
-        body['text_one'] = text_one
-        body['text_two'] = text_two
+        body['disp_txt'] = dispfields
 
         if (cur_license){
           body['license_id'] = cur_license.license_id
