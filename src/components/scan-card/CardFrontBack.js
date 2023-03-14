@@ -39,10 +39,9 @@ export default function CardFrontBack({
 
   const [curPhoto, setCurPhoto] = useState(photo)
   const [curWebp, setCurWebp] = useState(webp)
-
   const [openPicker, setOpenPicker] = useState(false)
-
   const [barcodeBuf, setBarcodeBuf] = useState()
+  const [dispTxts, setDispTxts] = useState([])
 
   const changePhoto = async changed_img => {
     setOpenPicker(false)
@@ -107,6 +106,38 @@ export default function CardFrontBack({
   }
 
   React.useEffect(()=>{
+    let bName = false
+    for (let k = 0 ; k < dispfields.length; k++){
+      if (dispfields[k].label.trim().toLowerCase() == 'name'){
+        dispfields[k].value = first_name + ' ' + (middle_name ? middle_name + ' ':'') + last_name
+        bName = true
+      }
+    }
+    if (!bName){
+      const newList = [
+        ...dispfields,
+        {
+          label: 'Name',
+          placeholder: 'Name',
+          type: 'text',
+          value: first_name + ' ' + (middle_name ? middle_name + ' ':'') + last_name,
+          extend: false,
+          removable: true,
+          side: Constants.displaySide.back,
+          xpos: 88,
+          ypos: 125,
+          color: 'black',
+          size: 14
+        },
+      ]
+      setDispTxts(newList)
+    } else {
+      setDispTxts(dispfields)
+    }
+    console.log(dispTxts)
+  }, [dispfields])
+
+  React.useEffect(()=>{
     // console.log("photo:", photo)
     showVericode(barcode)
     setCurPhoto(photo)
@@ -142,8 +173,12 @@ export default function CardFrontBack({
           />          
           <div>            
             {
-              dispfields.map((item, index) => {
-                return(item.side == Constants.displaySide.front ? <span className={classes.cardTitle} style={{color: item.color, position: 'absolute', left: item.xpos * 100/Constants.cardSize.width + 2 + '%', top: item.ypos * 100/Constants.cardSize.height + '%'}}>{item.label=='Member ID'||item.label=='Card ID' ?  "ID: " + item.value : item.label + " : " + item.value}</span> : null)
+              dispTxts.map((item) => {
+                if(item.label.trim().toLowerCase() != 'name'){
+                  return(item.side == Constants.displaySide.front ? <span className={classes.dispText} style={{color: item.color, position: 'absolute', fontSize: item.size + 'px', left: item.xpos * 100/Constants.cardSize.width + 2 + '%', top: item.ypos * 100/Constants.cardSize.height + '%'}}>{item.label=='Member ID'||item.label=='Card ID' ?  "ID: " + item.value : item.label + " : " + item.value}</span> : null)
+                } else{
+                  return(item.side == Constants.displaySide.front ? <span className={classes.dispText} style={{color: item.color, position: 'absolute', fontSize: item.size + 'px', left: item.xpos * 100/Constants.cardSize.width + 2 + '%', top: item.ypos * 100/Constants.cardSize.height + '%'}}>{item.value}</span> : null)
+                }
               })
             }
           </div>
@@ -177,8 +212,12 @@ export default function CardFrontBack({
           />
           <div>            
             {
-              dispfields.map((item, index) => {
-                return(item.side == Constants.displaySide.back ? <span className={classes.cardTitle} style={{color: item.color, position: 'absolute', left: item.xpos * 100/Constants.cardSize.width + 2 + '%', top: item.ypos * 100/Constants.cardSize.height + '%'}}>{item.label=='Member ID'||item.label=='Card ID' ?  "ID: " + item.value : item.label + " : " + item.value}</span> : null)
+              dispTxts.map((item) => {
+                if(item.label.trim().toLowerCase() != 'name'){
+                  return(item.side == Constants.displaySide.back ? <span className={classes.dispText} style={{color: item.color, position: 'absolute', fontSize: item.size + 'px' , left: item.xpos * 100/Constants.cardSize.width + 2 + '%', top: item.ypos * 100/Constants.cardSize.height + '%'}}>{item.label=='Member ID'||item.label=='Card ID' ?  "ID: " + item.value : item.label + " : " + item.value}</span> : null)
+                } else {
+                  return(item.side == Constants.displaySide.back ? <span className={classes.dispText} style={{color: item.color, position: 'absolute', fontSize: item.size + 'px', left: item.xpos * 100/Constants.cardSize.width + 2 + '%', top: item.ypos * 100/Constants.cardSize.height + '%'}}>{item.value}</span> : null)
+                }
               })
             }
           </div>
@@ -224,20 +263,7 @@ export default function CardFrontBack({
                     marginBottom: 0,
                   }}
                 />
-              {/* src={!!curWebp && 'data:image/webp;base64,' + curWebp} */}
-              <div 
-                style={{
-                  marginTop: '-5px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignContent:'flex-start'
-              }}>
-                <span className={classes.cardTitle}>{first_name + ' ' + (middle_name ? middle_name + ' ':'') + last_name}</span>
-                {/* first_name.slice(0,1).toUpperCase() + '. ' */}
-                {/* <span className={classes.cardNumber}>
-                  {card_id? "ID: " + card_id : ''}
-                </span> */}
-              </div>
+              
             </div>
             <div
               style={{                

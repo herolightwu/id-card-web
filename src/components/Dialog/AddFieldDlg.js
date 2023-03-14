@@ -32,8 +32,6 @@ export default function AddFieldDlg({
   const [label, setLabel] = React.useState("")
   const [value, setValue] = React.useState("text")
   const [dispSide, setDispSide] = React.useState(Constants.displaySide.none)
-  const [xPos, setXPos] = React.useState(88)
-  const [yPos, setYPos] = React.useState(160)
   const [txtColor, setTxtColor] = React.useState('black')
   const [txtSize, setTxtSize] = React.useState(14)
   const [showError, setShowError] = React.useState("")
@@ -49,9 +47,7 @@ export default function AddFieldDlg({
       return 
     }
     if (onAdd) {
-      setXPos(xxpos)
-      setYPos(yypos)
-      onAdd(label, value, dispSide, xPos, yPos, txtColor, txtSize)
+      onAdd(label, value, dispSide, xxpos, yypos, txtColor, txtSize)
     }
   }
 
@@ -140,7 +136,7 @@ export default function AddFieldDlg({
                   onChange={(event) => {
                     const checked = event.target.checked
                     setDispSide(checked? Constants.displaySide.front : Constants.displaySide.none)
-                    console.log("front side : ", checked)
+                    // console.log("front side : ", checked)
                   }}
                   name="front"
                   color="primary"
@@ -155,7 +151,7 @@ export default function AddFieldDlg({
                   onChange={(event) => {
                     const checked = event.target.checked
                     setDispSide(checked? Constants.displaySide.back : Constants.displaySide.none)
-                    console.log("back side : ", checked)
+                    // console.log("back side : ", checked)
                   }}
                   name="back"
                   color="primary"
@@ -173,7 +169,7 @@ export default function AddFieldDlg({
                 value ={xxpos}
                 placeholder='x_pos'
                 editMode={true} 
-                formFields={changePosition.bind(this)}
+                formFields={(changePosition.bind(this))}
                 showError={showError}
               />
             </div>              
@@ -191,7 +187,7 @@ export default function AddFieldDlg({
                     value={txtSize}
                     onChange={e => { 
                       setTxtSize(e.target.value)                     
-                      console.log("Font Size : ", e.target.value)
+                      // console.log("Font Size : ", e.target.value)
                     }}>
                     <MenuItem value={'10'} key={'10'}>10</MenuItem>
                     <MenuItem value={'11'} key={'11'}>11</MenuItem>
@@ -233,7 +229,7 @@ export default function AddFieldDlg({
                     value={txtColor}
                     onChange={e => {
                       setTxtColor(e.target.value)                 
-                      console.log("Color : ", e.target.value)
+                      // console.log("Color : ", e.target.value)
                     }}>
                     <MenuItem value={'black'} key={'1'}>Black</MenuItem>
                     <MenuItem value={'red'} key={'2'}>Red</MenuItem>

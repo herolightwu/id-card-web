@@ -19,7 +19,7 @@ import Select from '@material-ui/core/Select'
 import MenuItem from '@material-ui/core/MenuItem'
 
 import { MainLayout } from '../../components/Layout'
-import { VColor } from '../../utils/constants'
+import Constants, { VColor } from '../../utils/constants'
 import { Grid } from '@material-ui/core'
 
 import DateFnsUtils from '@date-io/date-fns'
@@ -526,14 +526,37 @@ class ManageCards extends React.Component {
           }
         }
         // console.log("form fileds :", valFields)
-        // console.log("row data : ", rowdata)
   
         let body = {}
         let mem_id = ''
         let code_fields = rowdata.code_fields
+        let bName = false
         for(let ind = 0; ind < dispfields.length; ind++){
-          dispfields[ind].value = code_fields[dispfields[ind].name]
+          if (dispfields[ind].label.trim().toLowerCase() == 'name'){
+            dispfields[ind].value = code_fields['first_name'] + ' ' + code_fields['last_name']
+            bName = true
+          } else{
+            dispfields[ind].value = code_fields[dispfields[ind].name]
+          } 
         }
+        if(!bName){
+          let dispName = {
+            label: 'Name',
+            placeholder: 'Name',
+            name: 'name',
+            type: 'text',
+            value: code_fields['first_name'] + ' ' + code_fields['last_name'],
+            extend: false,
+            removable: true,
+            side: Constants.displaySide.back,
+            xpos: 88,
+            ypos: 125,
+            color: 'black',
+            size: 14
+          }
+          dispfields.push(dispName)
+        }
+        // console.log("dispfields :", dispfields)
         
         if (rowdata.code_fields["member_id"]){
           mem_id = "ID: " + rowdata.code_fields["member_id"]

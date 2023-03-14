@@ -93,6 +93,10 @@ const useStyles = makeStyles(theme => ({
       color: VColor.red,    
       marginBottom: -5
     },
+    dispText:{
+      fontWeight: 600,
+      marginBottom: -5
+    },
 
     labelText:{
       fontSize: 12,

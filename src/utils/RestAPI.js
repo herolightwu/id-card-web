@@ -1,6 +1,6 @@
 export const cryptoURL = 'https://api.idcard.veritecinc.com';	//'http://192.168.10.121:3000';
 
-export const serverURL = 'http://192.168.1.118:3000';
+export const serverURL = 'http://192.168.10.121:3000';
 // export const serverURL = 'https://api.idcard.dev.veritecinc.com';
 
 export const hostURL = serverURL;

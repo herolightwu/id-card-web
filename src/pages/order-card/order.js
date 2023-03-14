@@ -145,7 +145,7 @@ export class OrderCard extends React.Component {
   componentDidMount () {
     const { dispatch, userData, basicData, selCard } = this.props
     
-    formFields = selCard.program_template
+    formFields = selCard.program_template.filter(item => item.label.trim().toLowerCase() != 'name')
     // console.log("template : ", formFields)
     for(let ind = 0; ind < formFields.length; ind++){
       formFields[ind].name = formFields[ind].label.toString().toLowerCase().replace(/\s/g, '_')
@@ -256,13 +256,20 @@ export class OrderCard extends React.Component {
 
     // console.log ("jsonbarcode: ", this.props.selCard.jsonbarcode)
     let enc_string = '' 
+    let bfind = false
     if (this.props.selCard.jsonbarcode){
       enc_string = this.props.selCard.program_id + '~' + this.state.unique_id
       for (let i = 0; i < Object.keys(this.props.selCard.jsonbarcode).length; i++){
+        bfind = false
         for (let j = 0; j < fields.length; j++) {
           if (fields[j].label === this.props.selCard.jsonbarcode[i + '']){        
             enc_string = enc_string + '~' + fields[j].value
+            bfind = true
+            break
           }
+        }
+        if (!bfind){
+          enc_string = enc_string + '~'
         }
       }
       const webp_str = bNoImageInCode? '' : this.state.webp       //~compress_image~available
@@ -516,13 +523,20 @@ export class OrderCard extends React.Component {
 
         // console.log ("jsonbarcode: ", this.props.selCard.jsonbarcode)
         let enc_string = '' 
+        let bfind = false
         if (this.props.selCard.jsonbarcode){
           enc_string = this.props.selCard.program_id + '~' + uid
           for (let i = 0; i < Object.keys(this.props.selCard.jsonbarcode).length; i++){
+            bfind = false
             for (let j = 0; j < fields.length; j++) {
               if (fields[j].label === this.props.selCard.jsonbarcode[i + '']){        
                 enc_string = enc_string + '~' + fields[j].value
+                bfind = true
+                break
               }
+            }
+            if(!bfind){
+              enc_string = enc_string + '~'
             }
           }
           

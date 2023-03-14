@@ -11,6 +11,7 @@ import CardFrontBack from '../../components/scan-card/CardFrontBack'
 import Zoom from '@material-ui/core/Zoom'
 import useMediaQuery from '@material-ui/core/useMediaQuery'
 import Utils from '../../utils/utils'
+import Constants from '../../utils/constants'
 import Fab from '@material-ui/core/Fab'
 import EditImg from '../../assets/images/edit.png'
 import FilledTextInput from '../../components/scan-card/FilledTextInput'
@@ -224,7 +225,7 @@ export class ViewManageCard extends React.Component {
       })
     }
 
-    console.log("disp fields: ", dispfields)
+    // console.log("disp fields: ", dispfields)
     this.setState({formFields: formfields, disp_txt: dispfields})
   }
 
@@ -307,13 +308,20 @@ export class ViewManageCard extends React.Component {
 
     // console.log ("jsonbarcode: ", this.props.selCard.jsonbarcode)
     let enc_string = '' 
+    let bfind = false
     if (this.state.card_program.jsonbarcode){
       enc_string = this.props.location.state.program_id + '~' + this.props.location.state.unique_id
       for (let i = 0; i < Object.keys(this.state.card_program.jsonbarcode).length; i++){
+        bfind = false
         for (let j = 0; j < fields.length; j++) {
           if (fields[j].label === this.state.card_program.jsonbarcode[i + '']){        
             enc_string = enc_string + '~' + fields[j].value
+            bfind = true
+            break
           }
+        }
+        if (!bfind){
+          enc_string = enc_string + '~'
         }
       }
       const webp_str = bNoImageInCode? '' : this.state.webp       //~compress_image~available
@@ -734,6 +742,32 @@ export class ViewManageCard extends React.Component {
         mem_id = "ID: " + fields[i].value
       }
     }
+
+    let dispfields = this.state.disp_txt
+    let bName = false
+    for(let ind = 0; ind < dispfields.length; ind++){
+      if (dispfields[ind].label.trim().toLowerCase() == 'name'){
+        dispfields[ind].value = this.props.location.state.first_name + ' ' + this.props.location.state.last_name
+        bName = true
+      } 
+    }
+    if(!bName){
+      const dispName = {
+        label: 'Name',
+        placeholder: 'Name',
+        name: 'name',
+        type: 'text',
+        value: this.props.location.state.first_name + ' ' + this.props.location.state.last_name,
+        extend: false,
+        removable: true,
+        side: Constants.displaySide.back,
+        xpos: 88,
+        ypos: 125,
+        color: 'black',
+        size: 14
+      }
+      dispfields.push(dispName)
+    }
     
     body['face_image'] = this.state.photo
     body['compressed_face_image'] = this.state.webp
@@ -750,7 +784,7 @@ export class ViewManageCard extends React.Component {
     body['user_id'] = userid
     body['member_id'] = mem_id
     body['printed_size'] = this.state.card_program.printed_size
-    body['disp_txt'] = this.state.disp_txt
+    body['disp_txt'] = dispfields
     
     if (cur_license){
       body['license_id'] = cur_license.license_id
