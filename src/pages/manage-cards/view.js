@@ -141,7 +141,6 @@ export class ViewManageCard extends React.Component {
         if (this.alertRef.current) {
           this.alertRef.current.showDialog('', 'Cannot get the card licenses')
         }
-        return null;
       }) 
       .finally(()=>{
       })
@@ -159,16 +158,30 @@ export class ViewManageCard extends React.Component {
       const card_URL = serverURL + '/api/cardprogram/'+this.props.location.state.program_id;
       axios.get(card_URL, { headers })
       .then(response => {
-        const prog_data = response.data.data;
-        this.setState({card_program: prog_data[0]}, ()=>{
+        if(response.data.data.length > 0){
+          const prog_data = response.data.data;
+          this.setState({card_program: prog_data[0]}, ()=>{
           this.setFieldValues()
-        })
-        resolve(prog_data[0]);
+          })
+          resolve(prog_data[0]);
+        } else {
+          if (this.alertRef.current) {
+            this.alertRef.current.showDialog('', 'There is no a card program for the selected card', () => {
+              navigate('/manage-cards/')            
+            })
+          } else {
+            navigate('/manage-cards/')
+          }
+        }
       })
       .catch((error) => {
-        // console.log(error);
-        navigate('/manage-cards/')
-        return null;
+        if (this.alertRef.current) {
+          this.alertRef.current.showDialog('', 'Cannot get a card program for the selected card', () => {
+            navigate('/manage-cards/')            
+          })
+        } else {
+          navigate('/manage-cards/')
+        }
       }) 
       .finally(()=>{
       })
@@ -246,9 +259,13 @@ export class ViewManageCard extends React.Component {
         resolve(user_data[0]);
       })
       .catch((error) => {
-        // console.log(error);
-        navigate('/manage-cards/')
-        return null;
+        if (this.alertRef.current) {
+          this.alertRef.current.showDialog('', 'There is no user for the selected card', () => {
+            navigate('/manage-cards/')            
+          })
+        } else {
+          navigate('/manage-cards/')
+        }
       }) 
       .finally(()=>{
       })

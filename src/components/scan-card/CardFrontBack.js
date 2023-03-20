@@ -134,7 +134,7 @@ export default function CardFrontBack({
     } else {
       setDispTxts(dispfields)
     }
-    console.log(dispTxts)
+    // console.log(dispTxts)
   }, [dispfields])
 
   React.useEffect(()=>{
@@ -173,11 +173,11 @@ export default function CardFrontBack({
           />          
           <div>            
             {
-              dispTxts.map((item) => {
+              dispTxts.map((item, index) => {
                 if(item.label.trim().toLowerCase() != 'name'){
-                  return(item.side == Constants.displaySide.front ? <span className={classes.dispText} style={{color: item.color, position: 'absolute', fontSize: item.size + 'px', left: item.xpos * 100/Constants.cardSize.width + 2 + '%', top: item.ypos * 100/Constants.cardSize.height + '%'}}>{item.label=='Member ID'||item.label=='Card ID' ?  "ID: " + item.value : item.label + " : " + item.value}</span> : null)
+                  return(item.side == Constants.displaySide.front ? <span key={index} className={classes.dispText} style={{color: item.color, position: 'absolute', fontSize: item.size + 'px', left: item.xpos * 100/Constants.cardSize.width + 2 + '%', top: item.ypos * 100/Constants.cardSize.height + '%'}}>{item.label=='Member ID'||item.label=='Card ID' ?  "ID: " + item.value : item.label + " : " + item.value}</span> : null)
                 } else{
-                  return(item.side == Constants.displaySide.front ? <span className={classes.dispText} style={{color: item.color, position: 'absolute', fontSize: item.size + 'px', left: item.xpos * 100/Constants.cardSize.width + 2 + '%', top: item.ypos * 100/Constants.cardSize.height + '%'}}>{item.value}</span> : null)
+                  return(item.side == Constants.displaySide.front ? <span key={index} className={classes.dispText} style={{color: item.color, position: 'absolute', fontSize: item.size + 'px', left: item.xpos * 100/Constants.cardSize.width + 2 + '%', top: item.ypos * 100/Constants.cardSize.height + '%'}}>{item.value}</span> : null)
                 }
               })
             }
@@ -212,11 +212,11 @@ export default function CardFrontBack({
           />
           <div>            
             {
-              dispTxts.map((item) => {
+              dispTxts.map((item, index) => {
                 if(item.label.trim().toLowerCase() != 'name'){
-                  return(item.side == Constants.displaySide.back ? <span className={classes.dispText} style={{color: item.color, position: 'absolute', fontSize: item.size + 'px' , left: item.xpos * 100/Constants.cardSize.width + 2 + '%', top: item.ypos * 100/Constants.cardSize.height + '%'}}>{item.label=='Member ID'||item.label=='Card ID' ?  "ID: " + item.value : item.label + " : " + item.value}</span> : null)
+                  return(item.side == Constants.displaySide.back ? <span key={index} className={classes.dispText} style={{color: item.color, position: 'absolute', fontSize: item.size + 'px' , left: item.xpos * 100/Constants.cardSize.width + 2 + '%', top: item.ypos * 100/Constants.cardSize.height + '%'}}>{item.label=='Member ID'||item.label=='Card ID' ?  "ID: " + item.value : item.label + " : " + item.value}</span> : null)
                 } else {
-                  return(item.side == Constants.displaySide.back ? <span className={classes.dispText} style={{color: item.color, position: 'absolute', fontSize: item.size + 'px', left: item.xpos * 100/Constants.cardSize.width + 2 + '%', top: item.ypos * 100/Constants.cardSize.height + '%'}}>{item.value}</span> : null)
+                  return(item.side == Constants.displaySide.back ? <span key={index} className={classes.dispText} style={{color: item.color, position: 'absolute', fontSize: item.size + 'px', left: item.xpos * 100/Constants.cardSize.width + 2 + '%', top: item.ypos * 100/Constants.cardSize.height + '%'}}>{item.value}</span> : null)
                 }
               })
             }

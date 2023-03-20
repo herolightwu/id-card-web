@@ -276,7 +276,7 @@ export function CardsDataTable(props) {
   }, [props.selectionModel])
 
   const gotoCardView = data => {
-    console.log("data:", data)
+    // console.log("data:", data)
     dispatch(setSelCard(data))
     navigate('/manage-cards/view', {state: data}) //selectManageCard
   }

@@ -402,15 +402,13 @@ export class UserView extends React.Component {
     let sel_domain = ''
 
     if (!this.props.isAdd){
-      sel_domain = this.props.location.state.domain
-      const oldemail = this.props.location.state.email
-      let old_array = oldemail.split('@')
-      let old_domain = old_array[1]      
-      const newemail = fields[0].value
-      console.log("domain : ", sel_domain)
+      sel_domain = this.props.location.state.domain       
+      const newemail = fields[0].value            
       let new_array = newemail.split('@')
-      let new_domain = new_array[1]      
-      if (old_domain != new_domain){
+      let new_str = new_array[1].split('.')
+      let new_domain = new_str[0]
+      // console.log("new domain : ", new_domain)
+      if (sel_domain != new_domain){
         newShowError['email'] = 'Email domain can not be changed'
         isValid = false
       }      
